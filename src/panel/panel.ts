@@ -10,6 +10,10 @@ function grabText(): string {
     /magic quadrant|gartner|omdia|forrester|that'?s a wrap|keynote|register now|apply now|get up to \$|in credits|©\s*\d{4}/i;
   const parts: string[] = [];
   document.querySelectorAll('h1, h2, h3, p, li').forEach((n) => {
+    const el = n as HTMLElement;
+    // Skip hidden nav/mega-menus so buzzwords aren't counted many times.
+    const visible = typeof el.checkVisibility === 'function' ? el.checkVisibility() : el.getClientRects().length > 0;
+    if (!visible) return;
     const t = (n.textContent || '').trim();
     if (t && !NOISE.test(t)) parts.push(t);
   });

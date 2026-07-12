@@ -25,12 +25,17 @@ export function score(text: string): ScoreResult {
   const buzzwordLoad: ScoreResult['buzzwordLoad'] =
     words < WORD_FLOOR ? null : fluffPer1k >= HIGH ? 'high' : fluffPer1k >= MEDIUM ? 'medium' : 'low';
 
-  const claims: DetectedClaim[] = matches.map((m) => ({
-    text: text.slice(m.span[0], m.span[1]),
-    span: m.span,
-    plain: m.entry.plain,
-    empty: m.entry.empty,
-  }));
+  // Dedupe by term for display (a page's nav/menus repeat the same buzzword many
+  // times). Density (fluffRaw) still counts every occurrence.
+  const seen = new Set<string>();
+  const claims: DetectedClaim[] = [];
+  for (const m of matches) {
+    const slice = text.slice(m.span[0], m.span[1]);
+    const key = slice.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    claims.push({ text: slice, span: m.span, plain: m.entry.plain, empty: m.entry.empty });
+  }
 
   const redFlags = deriveRedFlags(text, { fluffPer1k, concretePer1k, words });
   return { buzzwordLoad, fluffPer1k, words, claims, redFlags };
