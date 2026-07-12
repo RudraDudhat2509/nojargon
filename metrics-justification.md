@@ -19,18 +19,15 @@ Target composition: ~7 / ~6 / ~7 across buckets so the set spans the range. This
 
 ---
 
-## M1 — Substance score validity *(the core wedge claim)*
+## M1 — Substance score validity — ⛔ KILLED 2026-07-12
 
-**Claim under test:** the deterministic `substancePct` agrees with human judgment of fluff-vs-substance.
+**Claim under test (RETIRED):** the deterministic `substancePct` agrees with human judgment of fluff-vs-substance.
 
-- **Metric:** Spearman rank correlation ρ between `substancePct` and the human 1–3 label across the 20-page golden set.
-- **Target & citation:** ρ ≥ **0.70**. The standard guideline classifies ρ > 0.7 as a **strong** monotonic correlation — [SAS, "Weak or strong? How to interpret a Spearman correlation" (2023)](https://blogs.sas.com/content/iml/2023/04/05/interpret-spearman-kendall-corr.html). (The same source flags cutoffs as conventions, which is why the iterate band exists rather than a hard pass/fail.)
+- **Result:** Spearman ρ = **0.227** on the 20-page golden set → **KILL band**. Component analysis: `ρ(concrete-signal, label) = -0.09` (noise — fires on event banners / analyst citations, misses technical substance), `ρ(-fluff-density, label) = 0.28` (weak). See `learnings.md` → "M1 KILL".
+- **Why it's retired, not iterated:** "substance" is a *semantic* judgment (does the page concretely say what the product does). Regex counts of numbers/buzzwords are the wrong *kind* of signal; tuning weights can't fix that. Per the pre-registered kill band, we stop and reconsider rather than tune.
+- **Decision:** the deterministic layer no longer emits a substance **percentage**. It emits **decoded buzzwords + red flags + a coarse `buzzwordLoad` (high/med/low)** — all reliable. The substance verdict ("do they actually say what they do") moves to the LLM (`explainsWhatItDoes`, validated under M4). The deterministic wedge is now "can't hallucinate the buzzword list or the flags," validated by M2.
 
-| Band | Condition | Action |
-|---|---|---|
-| ✅ **Pass** | ρ ≥ 0.70 | Freeze weights; ship the score. |
-| 🔧 **Iterate** | 0.50 ≤ ρ < 0.70 | **Lever:** reweight the lexicon and/or add concrete-signal detectors (named-entity, numeric, spec patterns). Re-measure. |
-| ⛔ **Kill** | ρ < 0.50 | The "deterministic number" premise is too weak to carry the wedge. Stop and reconsider: either substance is inherently LLM-judged, or the golden labels are ill-defined. Do not ship a misleading meter. |
+> Superseded by the v0.3 plan (`docs/superpowers/plans/2026-07-12-free-native-summary.md`). `buzzwordLoad` is a deterministic function of buzzword density; its determinism is covered by M3. Its *usefulness* is covered by M2 (does it catch the buzzwords) rather than a correlation target, because we no longer claim it measures "substance."
 
 ---
 

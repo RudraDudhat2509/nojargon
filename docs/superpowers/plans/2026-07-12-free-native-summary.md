@@ -22,6 +22,55 @@
 
 ---
 
+## Task 0 — Engine pivot: retire `substancePct` → `buzzwordLoad`, fix extraction
+
+**Why:** M1 killed the substance % (ρ=0.227; concrete-signal ρ=-0.09). The deterministic layer keeps only what it does reliably: buzzword decoding + red flags + a coarse buzzword-load band. See `learnings.md` and `metrics-justification.md` M1.
+
+**Files:** `src/engine/types.ts`, `src/engine/index.ts`, `src/content/content-script.ts`, `tests/engine.test.ts`, `tests/content.test.ts`.
+
+- [ ] **Step 1 — types:** in `ScoreResult`, replace `substancePct: number | null` with `buzzwordLoad: 'high' | 'medium' | 'low' | null`. Keep `fluffPer1k`, `claims`, `redFlags`. Drop `concretePer1k` from the public shape (concrete count stays internal, used only by the `no_numbers_or_specs` flag).
+- [ ] **Step 2 — failing engine tests:** rewrite the score assertions.
+
+```ts
+it('flags heavy buzzword copy as high load', () => {
+  expect(score(FLUFF).buzzwordLoad).toBe('high');
+});
+it('flags concrete dev copy as low load', () => {
+  expect(score(SUBSTANCE).buzzwordLoad).toBe('low');
+});
+it('returns null load when there is essentially no text', () => {
+  expect(score('the and of to a').buzzwordLoad).toBeNull();
+});
+it('is deterministic across 100 runs (M3)', () => {
+  expect(new Set(Array.from({ length: 100 }, () => score(FLUFF).buzzwordLoad)).size).toBe(1);
+});
+```
+
+- [ ] **Step 3 — implement** in `index.ts`: remove the smoothing/`substancePct` math. Derive load from weighted buzzword density:
+
+```ts
+const WORD_FLOOR = 25;
+const buzzwordLoad =
+  words < WORD_FLOOR ? null : fluffPer1k >= 20 ? 'high' : fluffPer1k >= 6 ? 'medium' : 'low';
+```
+
+(Keep `concreteCount` import solely for `deriveRedFlags`; drop it from the returned object.)
+
+- [ ] **Step 4 — extraction fix (`content-script.ts`):** filter obvious non-product blocks so we stop scoring banners/citations. In the fallback collector, skip nodes whose text matches event/citation/promo markers:
+
+```ts
+const NOISE = /magic quadrant|gartner|omdia|forrester|that'?s a wrap|keynote|register now|apply now|get up to \$|in credits|© \d{4}/i;
+// when collecting h1/h2/h3/p/li, skip a node if NOISE.test(text)
+```
+
+Add a content test: a page whose visible text is dominated by a Gartner citation block yields `null`/thin, not a scored result.
+
+- [ ] **Step 5:** run `tests/engine.test.ts tests/content.test.ts tests/flags.test.ts` → PASS. Commit `feat(engine): retire substance% for buzzwordLoad + filter citation/banner noise`.
+
+> Downstream: `renderResult` and any `substancePct` reference must move to `buzzwordLoad` (handled in Task 4). Grep for `substancePct` and remove all uses.
+
+---
+
 ## The LLM contract (shared by both adapters)
 
 The LLM returns a small **structured** object — everything else in the card is deterministic:
@@ -152,7 +201,7 @@ export const NanoAdapter: LlmAdapter = {
 
 The reality-check list **fuses** LLM + deterministic signals. `renderEnrichment` now needs the `ScoreResult` too.
 
-- [ ] **Step 1 — failing test** (`panel-reality.test.ts`): given an `enriched` enrichment + a `ScoreResult` with `substancePct: 20` and a `no_named_customers` flag, the rendered card contains the TL;DR text, a "✗ no named customers" line, and an "80% marketing fluff" line.
+- [ ] **Step 1 — failing test** (`panel-reality.test.ts`): given an `enriched` enrichment + a `ScoreResult` with `buzzwordLoad: 'high'` and a `no_named_customers` flag, the rendered card contains the TL;DR text, a "✗ no named customers" line, and a "buzzword load: high" line.
 
 - [ ] **Step 2 — implement `renderEnrichment(root, res, result)`:**
 
@@ -169,7 +218,7 @@ export function renderEnrichment(root: HTMLElement, res: EnrichResponse, result:
       res.enrichment.explainsWhatItDoes ? 'clear what it does' : 'never actually says what it does'));
     // deterministic
     for (const f of result.redFlags) ul.append(bullet(doc, 'bad', f.message));
-    if (result.substancePct != null) ul.append(bullet(doc, 'warn', `${100 - result.substancePct}% marketing fluff`));
+    if (result.buzzwordLoad) ul.append(bullet(doc, 'warn', `buzzword load: ${result.buzzwordLoad} (${result.claims.length} found)`));
     box.append(ul);
   } else {
     box.append(el(doc, 'p', { class: 'cta' },
