@@ -27,4 +27,22 @@ describe('engine', () => {
   it('surfaces detected buzzwords as claims', () => {
     expect(score(FLUFF).claims.some((c) => c.text === 'seamless')).toBe(true);
   });
+
+  it('does not snap to a hard 100 on a page with few signals and no buzzwords', () => {
+    const s = score(
+      'We process payments for online businesses. It costs $29 per month and moves money ' +
+        'quickly between accounts for small teams that sell products on the internet.',
+    );
+    expect(s.substancePct!).toBeLessThan(95); // smoothed, not a raw 100
+  });
+
+  it('pulls a low-signal page toward neutral rather than null', () => {
+    const s = score(
+      'We help teams do great work together every single day of the week, and we care ' +
+        'about the people we work with and how they feel about the things they make.',
+    );
+    expect(s.substancePct).not.toBeNull();
+    expect(s.substancePct!).toBeGreaterThan(30);
+    expect(s.substancePct!).toBeLessThan(70);
+  });
 });

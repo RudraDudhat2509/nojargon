@@ -5,6 +5,12 @@ import type { ScoreResult, DetectedClaim } from './types';
 
 export * from './types';
 
+// Below this word count a page has too little text to score honestly → null ("no signal").
+const WORD_FLOOR = 25;
+// Pseudo-count strength for the neutral (0.5) prior: on sparse pages the score regresses
+// toward 50 instead of snapping to 0/100; on text-rich pages the prior is negligible.
+const SMOOTHING = 2;
+
 export function score(text: string): ScoreResult {
   const words = wordCount(text);
   const matches = findMatches(text);
@@ -15,8 +21,10 @@ export function score(text: string): ScoreResult {
   const fluffPer1k = per1k(fluffRaw);
   const concretePer1k = per1k(concreteRaw);
 
-  const denom = fluffPer1k + concretePer1k;
-  const substancePct = denom === 0 ? null : Math.round((100 * concretePer1k) / denom);
+  const substancePct =
+    words < WORD_FLOOR
+      ? null
+      : Math.round((100 * (concreteRaw + SMOOTHING * 0.5)) / (concreteRaw + fluffRaw + SMOOTHING));
 
   const claims: DetectedClaim[] = matches.map((m) => ({
     text: text.slice(m.span[0], m.span[1]),
