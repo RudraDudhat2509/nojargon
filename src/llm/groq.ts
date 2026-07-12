@@ -22,7 +22,8 @@ export const GroqAdapter: LlmAdapter = {
       body: JSON.stringify({
         model: 'openai/gpt-oss-20b',
         response_format: { type: 'json_object' },
-        max_tokens: 300,
+        reasoning_effort: 'low', // gpt-oss is a reasoning model — cap the thinking budget
+        max_tokens: 1024, // leave room for reasoning tokens + the JSON output
         messages: [
           { role: 'system', content: SYSTEM },
           { role: 'user', content: mainText.slice(0, 4000) },
