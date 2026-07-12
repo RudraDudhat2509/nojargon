@@ -1,37 +1,28 @@
 import type { ScoreResult } from '../engine/types';
 import type { EnrichResponse, ExtractResponse } from '../shared/messages';
 
-function el(doc: Document, tag: string, attrs: Record<string, string> = {}): HTMLElement {
+function el(doc: Document, tag: string, attrs: Record<string, string> = {}, text?: string): HTMLElement {
   const node = doc.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (text !== undefined) node.textContent = text;
   return node;
 }
 
+const GLYPH: Record<string, string> = { ok: '✓', bad: '✗', warn: '⚠' };
+
+function bullet(doc: Document, kind: 'ok' | 'bad' | 'warn', text: string): HTMLElement {
+  return el(doc, 'li', { class: `rc ${kind}` }, `${GLYPH[kind]} ${text}`);
+}
+
+// Deterministic "translations" section: each detected buzzword → its plain meaning.
 export function renderResult(root: HTMLElement, r: ScoreResult): void {
   const doc = root.ownerDocument;
   root.innerHTML = '';
-
-  const load = r.buzzwordLoad;
-  const meter = el(doc, 'div', { 'data-testid': 'meter', class: 'meter' });
-  meter.textContent =
-    load === null ? 'No signal on this page' : `Buzzword load: ${load} (${r.claims.length} found)`;
-  root.appendChild(meter);
-
-  if (r.redFlags.length) {
-    const flags = el(doc, 'ul', { class: 'flags' });
-    for (const f of r.redFlags) {
-      const li = el(doc, 'li');
-      li.textContent = `🚩 ${f.message}`;
-      flags.appendChild(li);
-    }
-    root.appendChild(flags);
-  }
-
   if (r.claims.length) {
+    root.appendChild(el(doc, 'h2', {}, 'Buzzwords decoded'));
     const list = el(doc, 'ul', { class: 'claims' });
     for (const c of r.claims) {
-      const li = el(doc, 'li');
-      li.textContent = `${c.text} → ${c.plain}`;
+      const li = el(doc, 'li', {}, `${c.text} → ${c.plain}`);
       if (c.empty) li.classList.add('empty');
       list.appendChild(li);
     }
@@ -43,30 +34,40 @@ export function renderProseLoading(root: HTMLElement): void {
   const doc = root.ownerDocument;
   root.querySelector('.prose')?.remove();
   const box = el(doc, 'section', { class: 'prose loading' });
-  const h = el(doc, 'h2');
-  h.textContent = 'What they actually do';
-  const p = el(doc, 'p', { class: 'cta' });
-  p.textContent = 'Reading the page…';
-  box.append(h, p);
+  box.append(el(doc, 'h2', {}, 'TL;DR'), el(doc, 'p', { class: 'cta' }, 'Reading the page…'));
   root.prepend(box);
 }
 
-export function renderEnrichment(root: HTMLElement, res: EnrichResponse): void {
+// The fused card: LLM TL;DR (when available) + a reality check that combines the
+// LLM's read with our deterministic red flags and buzzword load.
+export function renderEnrichment(root: HTMLElement, res: EnrichResponse, result: ScoreResult): void {
   const doc = root.ownerDocument;
   root.querySelector('.prose')?.remove();
   const box = el(doc, 'section', { class: 'prose' });
+
   if (res.type === 'enriched') {
-    const h = el(doc, 'h2');
-    h.textContent = 'What they actually do';
-    const p = el(doc, 'p');
-    p.textContent = res.whatTheyDo;
-    box.append(h, p);
+    box.append(el(doc, 'h2', {}, 'TL;DR'), el(doc, 'p', { class: 'tldr' }, res.enrichment.tldr));
+    if (res.enrichment.audience) box.append(el(doc, 'p', { class: 'audience' }, `For: ${res.enrichment.audience}`));
   } else {
-    const p = el(doc, 'p', { class: 'cta' });
-    p.textContent =
-      'Add a Claude key for the plain-English rewrite. The substance score and red flags above work without it.';
-    box.appendChild(p);
+    box.append(
+      el(doc, 'p', { class: 'cta' },
+        'Turn on the free summary: enable on-device AI (chrome://flags → Gemini Nano) or add a free Groq key. The reality check below works without it.'),
+    );
   }
+
+  box.append(el(doc, 'h2', {}, 'Reality check'));
+  const ul = el(doc, 'ul', { class: 'reality' });
+  if (res.type === 'enriched') {
+    ul.append(
+      res.enrichment.explainsWhatItDoes
+        ? bullet(doc, 'ok', 'clearly says what it does')
+        : bullet(doc, 'bad', 'never actually says what it does'),
+    );
+  }
+  for (const f of result.redFlags) ul.append(bullet(doc, 'bad', f.message));
+  if (result.buzzwordLoad) ul.append(bullet(doc, 'warn', `buzzword load: ${result.buzzwordLoad} (${result.claims.length} found)`));
+  box.append(ul);
+
   root.prepend(box);
 }
 
@@ -81,12 +82,8 @@ async function run(): Promise<void> {
   }
   renderResult(root, extracted.result);
   renderProseLoading(root);
-  const enrich = (await chrome.runtime.sendMessage({
-    type: 'enrich',
-    mainText: extracted.mainText,
-    claims: extracted.result.claims,
-  })) as EnrichResponse;
-  renderEnrichment(root, enrich);
+  const enrich = (await chrome.runtime.sendMessage({ type: 'enrich', mainText: extracted.mainText })) as EnrichResponse;
+  renderEnrichment(root, enrich, extracted.result);
 }
 
 if (typeof chrome !== 'undefined' && chrome.tabs) {

@@ -4,26 +4,24 @@ import { renderResult } from '../src/panel/panel';
 import { score } from '../src/engine';
 
 describe('renderResult', () => {
-  it('renders the buzzword-load meter and decoded claims', () => {
+  it('renders decoded buzzwords', () => {
     const { document } = parseHTML('<div id="root"></div>');
     const root = document.getElementById('root')! as unknown as HTMLElement;
     renderResult(
       root,
       score(
         'This cutting-edge, best-in-class, world-class platform leverages seamless synergy and ' +
-          'next-generation innovation to unlock disruptive, transformative, revolutionary value across ' +
-          'the entire ecosystem for every forward-thinking enterprise team building software today.',
+          'next-generation innovation to unlock disruptive value across the entire ecosystem for teams.',
       ),
     );
-    expect(root.querySelector('[data-testid="meter"]')).toBeTruthy();
-    expect(root.textContent).toContain('Buzzword load');
+    expect(root.textContent).toContain('Buzzwords decoded');
     expect(root.textContent).toContain('seamless');
   });
 
-  it('shows a no-signal meter when there is too little text', () => {
+  it('renders nothing when there are no buzzwords', () => {
     const { document } = parseHTML('<div id="root"></div>');
     const root = document.getElementById('root')! as unknown as HTMLElement;
-    renderResult(root, score('the and of to a'));
-    expect(root.textContent).toContain('No signal');
+    renderResult(root, score('We host a Postgres database with authentication and file storage for developers.'));
+    expect(root.querySelector('.claims')).toBeNull();
   });
 });

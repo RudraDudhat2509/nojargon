@@ -1,4 +1,5 @@
-import type { ScoreResult, DetectedClaim, Label } from '../engine/types';
+import type { ScoreResult } from '../engine/types';
+import type { Enrichment } from '../llm/adapter';
 
 export type ExtractRequest = { type: 'extract' };
 
@@ -6,8 +7,6 @@ export type ExtractResponse =
   | { type: 'extracted'; mainText: string; result: ScoreResult }
   | { type: 'no-content' };
 
-export type EnrichRequest = { type: 'enrich'; mainText: string; claims: DetectedClaim[] };
+export type EnrichRequest = { type: 'enrich'; mainText: string };
 
-export type EnrichResponse =
-  | { type: 'enriched'; whatTheyDo: string; claimLabels: Record<number, Label> }
-  | { type: 'no-llm' };
+export type EnrichResponse = { type: 'enriched'; enrichment: Enrichment } | { type: 'no-llm' };

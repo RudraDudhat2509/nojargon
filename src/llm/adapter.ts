@@ -1,12 +1,13 @@
-import type { DetectedClaim, Label } from '../engine/types';
+export interface Enrichment {
+  tldr: string; // one plain sentence: what they actually do, zero buzzwords
+  explainsWhatItDoes: boolean; // did the PAGE concretely say what they do, or just hype?
+  audience: string | null; // who it's for, if stated
+}
 
 export interface LlmAdapter {
   name: string;
   isAvailable(): Promise<boolean>;
-  enrich(
-    mainText: string,
-    claims: DetectedClaim[],
-  ): Promise<{ whatTheyDo: string; claimLabels: Record<number, Label> }>;
+  enrich(mainText: string): Promise<Enrichment>;
 }
 
 export async function selectAdapter(candidates: LlmAdapter[]): Promise<LlmAdapter | null> {
@@ -16,12 +17,30 @@ export async function selectAdapter(candidates: LlmAdapter[]): Promise<LlmAdapte
   return null;
 }
 
-export const PROMPT = (mainText: string): string =>
-  `You are helping someone do due diligence on a company. Read the page text below and explain, ` +
-  `in 2-3 plain sentences a normal person understands: (1) what this company actually does, ` +
-  `(2) who it is for, and (3) how it makes money if that is stated. ` +
-  `Strip ALL marketing jargon — no buzzwords, no hype, just the concrete reality. ` +
-  `Ban these words entirely: cutting-edge, seamless, synergy, leverage, best-in-class, world-class, ` +
-  `next-generation, robust, scalable, innovative, holistic, ecosystem, empower, unlock, streamline, ` +
-  `transformative, revolutionary, disruptive, agentic, platform. ` +
-  `If the page genuinely does not say what they do, say exactly that — do not guess.\n\n${mainText.slice(0, 4000)}`;
+// JSON schema shared by Nano's `responseConstraint` and Groq's `response_format`.
+export const ENRICH_SCHEMA = {
+  type: 'object',
+  required: ['tldr', 'explainsWhatItDoes', 'audience'],
+  additionalProperties: false,
+  properties: {
+    tldr: { type: 'string' },
+    explainsWhatItDoes: { type: 'boolean' },
+    audience: { type: ['string', 'null'] },
+  },
+} as const;
+
+export const SYSTEM =
+  'You do due-diligence triage. Given a company web page, reply ONLY with JSON matching this shape: ' +
+  '{"tldr": string, "explainsWhatItDoes": boolean, "audience": string | null}. ' +
+  'tldr: one plain sentence a normal person understands, saying what the company actually does — ' +
+  'strip ALL marketing jargon, no buzzwords. explainsWhatItDoes: true only if the page concretely says ' +
+  'what they do (not just hype). audience: who it is for if stated, else null.';
+
+export function parseEnrichment(raw: unknown): Enrichment {
+  if (typeof raw !== 'string') throw new Error('enrichment: expected a JSON string');
+  const obj = JSON.parse(raw) as Record<string, unknown>;
+  if (typeof obj.tldr !== 'string' || obj.tldr.trim() === '') throw new Error('enrichment: bad tldr');
+  if (typeof obj.explainsWhatItDoes !== 'boolean') throw new Error('enrichment: bad explainsWhatItDoes');
+  const audience = obj.audience == null ? null : String(obj.audience);
+  return { tldr: obj.tldr.trim(), explainsWhatItDoes: obj.explainsWhatItDoes, audience };
+}

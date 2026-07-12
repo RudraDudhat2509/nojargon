@@ -35,21 +35,40 @@ body {
   font-style: italic;
 }
 
-.meter {
-  font-size: 18px;
+.prose .tldr {
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 12px;
+  color: #e8e6df;
+  margin: 0 0 10px;
+}
+
+.prose .audience {
+  margin: -6px 0 10px;
+  font-size: 13px;
+  color: #8a8780;
+}
+
+.reality {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.reality .rc {
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+.reality .ok {
   color: #d9b56a;
 }
 
-.flags {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 12px;
+.reality .bad {
+  color: #c9a58a;
 }
 
-.flags li {
-  margin: 4px 0;
+.reality .warn {
+  color: #8a8780;
 }
 
 .claims {
