@@ -1,0 +1,13 @@
+1Gartner:
+
+Gartner®, Magic Quadrant™ for Communications Platform as a Service, Lisa Unden-Farboud, Ajit Patankar, Brian Doherty, Daniel O’Connell, September 18, 2023
+Gartner®, Magic Quadrant™ for Communications Platform as a Service, Lisa Unden-Farboud, Ajit Patankar, Pankil Sheth, Brian Doherty, June 24, 2024
+Gartner®, Magic Quadrant™ for Communications Platform as a Service, Lisa Unden-Farboud, Manoj Bhatia, Pankil Sheth, Ajit Patankar, July 21, 202
+Gartner®, Magic Quadrant™ for Communications Platform as a Service, Lisa Unden-Farboud, Pankil Sheth, Ajit Patankar, May 18, 2026
+2Omdia Universe: Customer Engagement Platforms, 2026, Mila D'Antonio, Principal Analyst, Customer Engagement
+3IDC:
+IDC MarketScape: Worldwide Communications Platform as a Service 2021 Vendor Assessment report
+Twilio Named Leader for the Fifth Time in IDC MarketScape for CPaaS!
+IDC MarketScape: Worldwide Communications Platform as a Service (CPaaS) 2023 Vendor Assessment report (doc #US50607923, May 2023)
+IDC MarketScape: Worldwide Communications Platform as a Service 2025 Vendor Assessment", February 2025, Doc. #US52039625
+IDC MarketScape: Worldwide Customer Data Platforms Focused on B2C Users Vendor Assessment", By Tapan Patel and Gerry Murray, December 2024, Doc. #US51778724

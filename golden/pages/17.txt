@@ -1,0 +1,221 @@
+The platform for devs who just want to ship. Powered by sandboxes that let you deploy any code with confidence.
+        
+
+          
+  
+
+    
+            Deploy your app
+          
+  
+
+  
+
+
+
+
+
+      
+  
+  
+        
+          
+            Modern Compute Without the Complexity
+          
+          
+            For builders who need compute that keeps up with their ideas, Fly Machines are hardware-virtualized containers that launch instantly and run only when you need them. Deploy an app in minutes or run untrusted code in isolated sandboxes.
+          
+          
+        
+        
+      
+  
+      
+        
+          Sandboxes That Feel Like a Superpower
+        
+        
+          Spin up hardware-isolated sandboxes for running AI-generated code in complete safety. Every Sprite is a self-contained environment, ready for action in under a second. Checkpoint your entire environment, run anything, and restore if you break something. Pay only for actual CPU and memory consumption, down to the second.
+        
+        
+  
+
+    
+          Check Em Out!
+        
+  
+
+  
+
+
+
+
+      
+    
+  
+      
+        
+          Storage That Keeps Up
+        
+        
+          Fast local NVMe for low-latency work, plus global, durable object storage for data that needs to stick around. Snapshot environments, persist state, and scale storage right alongside your sandboxes.
+        
+      
+      
+    
+  
+      
+        
+          Built-In Private Networking
+        
+        
+          Private networks per sandbox, granular routing, and end-to-end encryption — all automatic.
+        
+      
+    
+  
+      
+        
+          
+          
+            
+              VMs That Do Everything You Need
+            
+            
+              Everything runs on Machines: your apps, agents that scale to millions of users, and AI-generated code.
+            
+          
+        
+        
+          
+          
+            
+              Fork Off VMs Like They're Processes
+            
+            
+              Fly Machines start fast enough to handle HTTP requests, run only when you need them, and scale into tens of thousands of instances.
+            
+          
+        
+        
+          
+          
+            
+              Built for Distributed Systems
+            
+            
+              Run clustered databases like Cockroach, globally-distributed Postgres, and modern RPC systems like Elixir FLAME. No Terraform required.
+            
+          
+        
+        
+          
+          
+            
+              Get Right in Your Users' Faces
+            
+            
+              Deploy in 18 regions, from Sydney to São Paulo. Sub-100ms response times give users that native-app feel, no matter where they are.
+            
+          
+        
+      
+    
+
+  
+  
+      
+        
+          Agents Run Better on Sprites
+        
+        
+          You don't have to be a cloud guru to build scalable agents. Run every instance on its own VM with dedicated CPU, memory, networking, and a private filesystem. Forget wrestling with shared runtimes or noisy neighbors. Get persistent brains when you need them, ephemeral workers when you don't.
+        
+        
+  
+
+    
+          Build for scale from Day One
+        
+  
+
+  
+
+
+
+
+      
+      
+    
+  
+  
+    
+      
+        
+  
+          Enterprise-Ready
+        
+
+        
+          Apps running on Fly Machines are KVM hardware-isolated, built on a memory-safe stack and running directly on our own metal.
+        
+        
+      
+      
+  
+  
+    
+      
+        
+          
+
+            
+              
+              Single Sign-On
+              
+            
+
+            
+              
+              Guaranteed Support Response Times
+              
+            
+
+            
+              
+              SOC2 Type 2 Attested
+              
+            
+
+            
+              
+              Memory-safe Rust and Go stack
+              
+            
+
+            
+              
+              CI/CD Integration
+              
+            
+
+          
+        
+      
+    
+  
+
+
+  
+      
+        
+          Build Whatever You Can Think Up (and Give Your Users The Same Power)
+        
+        
+          Fly.io is the platform that gets out of your way, running on the infrastructure that lets you run any code without fear. See how fast you can get started.
+        
+        
+  
+
+    
+          Spin Up a Sandbox
