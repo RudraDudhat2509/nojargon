@@ -1,5 +1,22 @@
+import { score } from '../engine';
 import type { ScoreResult } from '../engine/types';
-import type { EnrichResponse, ExtractResponse } from '../shared/messages';
+import type { EnrichResponse } from '../shared/messages';
+
+// Runs IN the page via chrome.scripting.executeScript — must be fully self-contained
+// (no imports, no outer-scope references). Grabs visible product copy, skipping
+// analyst-citation / event-banner / promo noise; falls back to body text.
+function grabText(): string {
+  const NOISE =
+    /magic quadrant|gartner|omdia|forrester|that'?s a wrap|keynote|register now|apply now|get up to \$|in credits|©\s*\d{4}/i;
+  const parts: string[] = [];
+  document.querySelectorAll('h1, h2, h3, p, li').forEach((n) => {
+    const t = (n.textContent || '').trim();
+    if (t && !NOISE.test(t)) parts.push(t);
+  });
+  let text = parts.join('\n').trim();
+  if (text.length < 40) text = (document.body?.innerText || '').trim();
+  return text.length >= 40 ? text : '';
+}
 
 function el(doc: Document, tag: string, attrs: Record<string, string> = {}, text?: string): HTMLElement {
   const node = doc.createElement(tag);
@@ -75,15 +92,29 @@ async function run(): Promise<void> {
   const doc = globalThis.document;
   const root = doc.getElementById('root') as HTMLElement;
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const extracted = (await chrome.tabs.sendMessage(tab!.id!, { type: 'extract' })) as ExtractResponse;
-  if (extracted.type === 'no-content') {
+  if (!tab?.id) {
+    root.textContent = 'No active tab.';
+    return;
+  }
+
+  let mainText = '';
+  try {
+    const [inj] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: grabText });
+    mainText = (inj?.result as string) ?? '';
+  } catch {
+    root.textContent = "Can't read this page (browser/system pages are off-limits).";
+    return;
+  }
+  if (!mainText) {
     root.textContent = 'No company copy found on this page.';
     return;
   }
-  renderResult(root, extracted.result);
+
+  const result = score(mainText);
+  renderResult(root, result);
   renderProseLoading(root);
-  const enrich = (await chrome.runtime.sendMessage({ type: 'enrich', mainText: extracted.mainText })) as EnrichResponse;
-  renderEnrichment(root, enrich, extracted.result);
+  const enrich = (await chrome.runtime.sendMessage({ type: 'enrich', mainText })) as EnrichResponse;
+  renderEnrichment(root, enrich, result);
 }
 
 if (typeof chrome !== 'undefined' && chrome.tabs) {
