@@ -17,4 +17,14 @@ describe('extractMain', () => {
     const { document } = parseHTML('<html><body></body></html>');
     expect(extractMain(document as unknown as Document)).toBeNull();
   });
+
+  it('falls back to visible headings/paragraphs when Readability is thin', () => {
+    const { document } = parseHTML(`<html><body>
+      <h1>Build your Agentic Enterprise on a trusted, open, unified platform</h1>
+      <p>Turn ideas into a business. Build, scale and monetize on an AI native foundation.</p>
+    </body></html>`);
+    const text = extractMain(document as unknown as Document);
+    expect(text).toContain('Agentic Enterprise');
+    expect(text).toContain('monetize');
+  });
 });
