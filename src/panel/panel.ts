@@ -11,9 +11,10 @@ export function renderResult(root: HTMLElement, r: ScoreResult): void {
   const doc = root.ownerDocument;
   root.innerHTML = '';
 
-  const pct = r.substancePct;
+  const load = r.buzzwordLoad;
   const meter = el(doc, 'div', { 'data-testid': 'meter', class: 'meter' });
-  meter.textContent = pct === null ? 'No signal on this page' : `Substance ${pct}%  ·  Vapor ${100 - pct}%`;
+  meter.textContent =
+    load === null ? 'No signal on this page' : `Buzzword load: ${load} (${r.claims.length} found)`;
   root.appendChild(meter);
 
   if (r.redFlags.length) {
@@ -38,8 +39,21 @@ export function renderResult(root: HTMLElement, r: ScoreResult): void {
   }
 }
 
+export function renderProseLoading(root: HTMLElement): void {
+  const doc = root.ownerDocument;
+  root.querySelector('.prose')?.remove();
+  const box = el(doc, 'section', { class: 'prose loading' });
+  const h = el(doc, 'h2');
+  h.textContent = 'What they actually do';
+  const p = el(doc, 'p', { class: 'cta' });
+  p.textContent = 'Reading the page…';
+  box.append(h, p);
+  root.prepend(box);
+}
+
 export function renderEnrichment(root: HTMLElement, res: EnrichResponse): void {
   const doc = root.ownerDocument;
+  root.querySelector('.prose')?.remove();
   const box = el(doc, 'section', { class: 'prose' });
   if (res.type === 'enriched') {
     const h = el(doc, 'h2');
@@ -66,6 +80,7 @@ async function run(): Promise<void> {
     return;
   }
   renderResult(root, extracted.result);
+  renderProseLoading(root);
   const enrich = (await chrome.runtime.sendMessage({
     type: 'enrich',
     mainText: extracted.mainText,

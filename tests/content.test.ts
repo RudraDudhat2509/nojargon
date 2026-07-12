@@ -27,4 +27,13 @@ describe('extractMain', () => {
     expect(text).toContain('Agentic Enterprise');
     expect(text).toContain('monetize');
   });
+
+  it('skips analyst-citation / event-banner noise in the fallback', () => {
+    const { document } = parseHTML(`<html><body>
+      <p>Gartner®, Magic Quadrant™ for Communications Platform as a Service, 2026.</p>
+      <p>Omdia Universe: Customer Engagement Platforms, 2026.</p>
+    </body></html>`);
+    // Only noise blocks present → nothing product-worthy survives → null.
+    expect(extractMain(document as unknown as Document)).toBeNull();
+  });
 });

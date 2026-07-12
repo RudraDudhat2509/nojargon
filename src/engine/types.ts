@@ -14,9 +14,8 @@ export interface RedFlag {
 }
 
 export interface ScoreResult {
-  substancePct: number | null;
+  buzzwordLoad: 'high' | 'medium' | 'low' | null;
   fluffPer1k: number;
-  concretePer1k: number;
   words: number;
   claims: DetectedClaim[];
   redFlags: RedFlag[];

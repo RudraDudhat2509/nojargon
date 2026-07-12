@@ -17,7 +17,11 @@ export async function selectAdapter(candidates: LlmAdapter[]): Promise<LlmAdapte
 }
 
 export const PROMPT = (mainText: string): string =>
-  `In two plain sentences, say what this company actually does. Ban these words: ` +
-  `cutting-edge, seamless, synergy, leverage, best-in-class, world-class, next-generation, ` +
-  `robust, scalable, innovative, holistic, ecosystem, empower, unlock, streamline, ` +
-  `transformative, revolutionary, disruptive. If you cannot tell what they do, say so.\n\n${mainText.slice(0, 4000)}`;
+  `You are helping someone do due diligence on a company. Read the page text below and explain, ` +
+  `in 2-3 plain sentences a normal person understands: (1) what this company actually does, ` +
+  `(2) who it is for, and (3) how it makes money if that is stated. ` +
+  `Strip ALL marketing jargon — no buzzwords, no hype, just the concrete reality. ` +
+  `Ban these words entirely: cutting-edge, seamless, synergy, leverage, best-in-class, world-class, ` +
+  `next-generation, robust, scalable, innovative, holistic, ecosystem, empower, unlock, streamline, ` +
+  `transformative, revolutionary, disruptive, agentic, platform. ` +
+  `If the page genuinely does not say what they do, say exactly that — do not guess.\n\n${mainText.slice(0, 4000)}`;
