@@ -11,8 +11,13 @@ export async function handleEnrich(
 ): Promise<EnrichResponse> {
   const adapter = await selectAdapter(adapters);
   if (!adapter) return { type: 'no-llm' };
-  const { whatTheyDo, claimLabels } = await adapter.enrich(mainText, claims);
-  return { type: 'enriched', whatTheyDo, claimLabels };
+  try {
+    const { whatTheyDo, claimLabels } = await adapter.enrich(mainText, claims);
+    return { type: 'enriched', whatTheyDo, claimLabels };
+  } catch {
+    // Adapter failed (bad key, offline, model evicted) — degrade to rules-only.
+    return { type: 'no-llm' };
+  }
 }
 
 if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {

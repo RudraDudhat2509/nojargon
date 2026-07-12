@@ -4,23 +4,43 @@ import { fileURLToPath } from 'node:url';
 import { score } from '../src/engine/index';
 
 /**
- * Spearman rank correlation (no tie correction — golden labels are 1/2/3 buckets,
- * ties handled by average-free ordinal ranking which is adequate for the M1 gate).
+ * Spearman rank correlation with tie correction. The M1 data is tie-heavy
+ * (labels are only 1/2/3 and many scores repeat), so the no-ties formula
+ * 1-6Σd²/n(n²-1) is invalid — compute Pearson correlation over average ranks.
  */
+function averageRanks(a: number[]): number[] {
+  const idx = a.map((v, i) => [v, i] as const).sort((p, q) => p[0] - q[0]);
+  const ranks = new Array<number>(a.length);
+  let i = 0;
+  while (i < idx.length) {
+    let j = i;
+    while (j + 1 < idx.length && idx[j + 1]![0] === idx[i]![0]) j++;
+    const avg = (i + j + 2) / 2; // average of ranks (1-indexed) i+1..j+1
+    for (let k = i; k <= j; k++) ranks[idx[k]![1]] = avg;
+    i = j + 1;
+  }
+  return ranks;
+}
+
 export function spearman(xs: number[], ys: number[]): number {
-  const rank = (a: number[]): number[] => {
-    const idx = a.map((v, i) => [v, i] as const).sort((p, q) => p[0] - q[0]);
-    const r = new Array<number>(a.length);
-    idx.forEach(([, i], k) => {
-      r[i] = k + 1;
-    });
-    return r;
-  };
-  const rx = rank(xs);
-  const ry = rank(ys);
-  const n = xs.length;
-  const d2 = rx.reduce((s, v, i) => s + (v - ry[i]!) ** 2, 0);
-  return 1 - (6 * d2) / (n * (n * n - 1));
+  const rx = averageRanks(xs);
+  const ry = averageRanks(ys);
+  const n = rx.length;
+  const mean = (a: number[]): number => a.reduce((s, v) => s + v, 0) / a.length;
+  const mx = mean(rx);
+  const my = mean(ry);
+  let cov = 0;
+  let vx = 0;
+  let vy = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = rx[i]! - mx;
+    const dy = ry[i]! - my;
+    cov += dx * dy;
+    vx += dx * dx;
+    vy += dy * dy;
+  }
+  if (vx === 0 || vy === 0) return 0; // no variance (constant series) → undefined correlation
+  return cov / Math.sqrt(vx * vy);
 }
 
 function band(rho: number): string {

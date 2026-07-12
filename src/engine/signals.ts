@@ -6,7 +6,8 @@ export function wordCount(text: string): number {
 const SIGNALS: RegExp[] = [
   /\b\d[\d,.]*\b/g, // numbers
   /[$₹€£]\s?\d/g, // currency
-  /\b\d+\s?(ms|s|kb|mb|gb|tb|%|x)\b/gi, // units
+  /\b\d+\s?(ms|kb|mb|gb|tb)\b/gi, // byte/time units
+  /\b\d+\s?[%x]/gi, // percentages and multipliers (no trailing \b — % and x aren't word chars)
   /\b(19|20)\d{2}\b/g, // years
   /\b(REST|API|SDK|SLA|OAuth|webhook|integration|integrations)\b/gi, // tech specifics
   /\b[A-Z][a-z]+ (?:Inc|Ltd|LLC|Corp|GmbH|Co)\b/g, // named orgs

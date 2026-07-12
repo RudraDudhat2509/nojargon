@@ -30,8 +30,10 @@ export const ClaudeAdapter: LlmAdapter = {
         messages: [{ role: 'user', content: PROMPT(mainText) }],
       }),
     });
+    if (!res.ok) throw new Error(`Claude API ${res.status}`);
     const data = await res.json();
     const whatTheyDo = (data?.content?.[0]?.text ?? '').trim();
+    if (!whatTheyDo) throw new Error('Claude API returned empty content');
     return { whatTheyDo, claimLabels: {} };
   },
 };
