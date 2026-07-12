@@ -38,7 +38,12 @@ export const SYSTEM =
 
 export function parseEnrichment(raw: unknown): Enrichment {
   if (typeof raw !== 'string') throw new Error('enrichment: expected a JSON string');
-  const obj = JSON.parse(raw) as Record<string, unknown>;
+  // Free/open models sometimes wrap JSON in ```json fences or add prose — extract the object.
+  const stripped = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+  const start = stripped.indexOf('{');
+  const end = stripped.lastIndexOf('}');
+  const json = start !== -1 && end !== -1 ? stripped.slice(start, end + 1) : stripped;
+  const obj = JSON.parse(json) as Record<string, unknown>;
   if (typeof obj.tldr !== 'string' || obj.tldr.trim() === '') throw new Error('enrichment: bad tldr');
   if (typeof obj.explainsWhatItDoes !== 'boolean') throw new Error('enrichment: bad explainsWhatItDoes');
   const audience = obj.audience == null ? null : String(obj.audience);

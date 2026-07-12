@@ -33,6 +33,11 @@ describe('parseEnrichment', () => {
     expect(() => parseEnrichment('{"tldr":"X"}')).toThrow();
   });
 
+  it('recovers JSON wrapped in markdown fences', () => {
+    const e = parseEnrichment('```json\n{"tldr":"X","explainsWhatItDoes":true,"audience":null}\n```');
+    expect(e.tldr).toBe('X');
+  });
+
   it('throws on non-JSON', () => {
     expect(() => parseEnrichment('not json')).toThrow();
   });
