@@ -1,72 +1,88 @@
 # No-Jargon
 
-An on-page **due-diligence lens** for your browser. Click the icon on any company page and a side panel tells you **what they actually do**, scores **substance vs vapor**, decodes the buzzwords, and flags the red flags.
+A bullshit detector for company websites. Click the icon on any company page and a side panel tells you — in plain English — **what they actually do**, whether they even *say* what they do, and where they're blowing smoke. Free, private, and it doesn't make things up.
 
-Not another text simplifier. The question it answers isn't "can you make this sentence simpler" — it's **"is there anything real underneath the marketing?"**
+Not another AI summarizer. The question it answers isn't "can you shorten this" — it's **"is there anything real underneath the marketing?"**
 
-## Why
+## What you get
 
-The "simplify text" shelf is full but stale, generic, and selection-based. The "summarize this page" shelf condenses vapor into polished vapor. The good plain-rewrite tools are legal-docs only. Nobody sits where this does: an on-page lens that judges whether a company's claims are substance or fluff. See [`market-report.md`](./market-report.md) for the full competitive research.
-
-## How it works
+A single card:
 
 ```
-click icon → side panel → content script extracts the page's main copy (Readability)
-           → engine.score(text)  [deterministic — runs always]
-           → panel renders substance meter + red flags + decoded claims
-           → background picks an LLM (on-device Nano → your Claude key → none)
-           → panel fills in the plain "what they actually do" rewrite
+TL;DR
+They automate busywork by wiring your apps together.
+For: small teams
+
+Reality check
+  ✓ clearly says what it does        ← the AI's read
+  ✗ no named customers                ← deterministic flag
+  ✗ no pricing shown                  ← deterministic flag
+  ⚠ buzzword load: high (14 found)    ← deterministic
+
+Buzzwords decoded
+  cutting-edge → new
+  orchestrate → coordinate
+  enterprise-grade → (vague — "serious enough for big companies")
 ```
 
-**The substance score is deterministic.** Same page in → same number out, every time — it is never produced by the LLM:
+The **TL;DR** and the "does it say what it does" line come from the AI. **Everything else — the flags, the buzzword load, the translations — is plain deterministic code that can't hallucinate.** So when it says "no named customers," that's a fact, not a guess.
 
+## Free & private — no paid key
+
+The summary runs on free engines, in this order:
+
+1. **Gemini Nano** — Chrome's built-in on-device AI. No key, no cost, nothing leaves your machine. Zero setup once enabled. *(Needs Chrome 138+, ~4GB model, 22GB free disk, capable hardware.)*
+2. **Groq** — a free hosted fallback for machines that can't run Nano. Free API key, no credit card.
+3. **Rules only** — if neither is on, the reality check + buzzwords still work; only the TL;DR line is hidden.
+
+There is no paid path. (An earlier build used a paid Claude key — removed.)
+
+### Turning on the summary
+
+**Nano (recommended):** enable `chrome://flags/#prompt-api-for-gemini-nano` and the on-device model component, restart Chrome, let the model download.
+
+**Groq (fallback):** get a free key at console.groq.com (no card), then in the panel's DevTools console:
+```js
+chrome.storage.local.set({ groqKey: 'gsk_YOUR_KEY' })
 ```
-fluff    = Σ(weight × buzzword_count) per 1000 words
-concrete = count of {numbers, prices, dates, named orgs, tech specifics} per 1000 words
-substance% = round(100 × concrete / (concrete + fluff))
-```
-
-This is the reliability point: the meter can't hallucinate. The LLM only writes the prose rewrite and labels each claim.
-
-## Privacy
-
-Fully client-side. No backend, ever. The plain-English rewrite runs on **Chrome's on-device Gemini Nano** (no data leaves your machine) or, if your hardware can't run it, on **your own Claude API key** stored in `chrome.storage.local`. If neither is present, the score, flags, and buzzword decodes still work — only the prose rewrite is hidden.
 
 ## Install (unpacked)
 
 ```bash
 npm install
-npm run build         # outputs dist/
+npm run build            # → dist/
+```
+Chrome → `chrome://extensions` → Developer mode → **Load unpacked** → select `dist/`. Open a company page in a **fresh** tab and click the icon.
+
+## How it works
+
+```
+click icon → content script extracts the page's main copy (Readability,
+             with a fallback for hero pages + citation/banner filtering)
+           → engine.score(text)  [deterministic: buzzwords + flags + buzzword load]
+           → panel renders the reality check + decoded buzzwords instantly
+           → background picks an engine (Nano → Groq → none)
+           → the LLM returns 3 structured fields; panel fills in the TL;DR
 ```
 
-Then in Chrome: `chrome://extensions` → enable Developer mode → **Load unpacked** → select `dist/`. Open a company page and click the No-Jargon icon.
+The LLM only ever returns `{ tldr, explainsWhatItDoes, audience }` (structured, schema-constrained) — it can't wander into freeform slop.
 
-To use the Claude fallback, set a key from the extension's DevTools console:
-```js
-chrome.storage.local.set({ claudeKey: 'sk-ant-...' })
-```
+## Metrics (see `metrics-justification.md`)
 
-## Metrics
-
-Success is measured, not asserted — see [`metrics-justification.md`](./metrics-justification.md) for the cited targets and pass/iterate/kill bands.
-
-| Metric | What | Target | Status |
-|---|---|---|---|
-| **M2** Buzzword coverage | % of published fluff lists detected | ≥ 90% | ✅ 100% (40/40) |
-| **M3** Determinism | score variance over 100 runs | 0 | ✅ 0 |
-| **M1** Score validity | Spearman ρ(score, human label) on 20 real pages | ≥ 0.70 | ⏳ pending labels — run `npm run eval:m1` |
-| **M4** Rewrite quality | % accurate + buzzword-free prose | ≥ 80% | ⏳ pending |
-
-**M1 calibration:** `npm run golden:extract` fetches the 20 pages in `golden/urls.json`; label each in `golden/labels.json` as `1` (fluff) / `2` (mixed) / `3` (substance); `npm run eval:m1` prints ρ and the band. Current weights show ceiling-clustering on short pages — the M1 iterate lever (add concrete-signal detectors / low-word smoothing) is the next calibration step.
+| Metric | What | Status |
+|---|---|---|
+| **M2** buzzword coverage | % of published fluff lists detected | ✅ 100% |
+| **M3** determinism | buzzword-load variance over 100 runs | ✅ 0 |
+| ~~**M1** substance %~~ | deterministic substance score vs human labels | ⛔ **killed** (ρ=0.23) — retired; substance is now the LLM's job, see `learnings.md` |
+| **M4** TL;DR quality | accurate + buzzword-free on the golden set | ⏳ pending an enabled engine |
 
 ## Develop
 
 ```bash
-npm test              # Vitest — 26 tests
-npm run dev           # vite build --watch
+npm test                 # Vitest — 38 tests
+npm run dev              # vite build --watch
 ```
 
 ## Roadmap
-
-- v1.1 — inline hover tooltips on detected jargon (in-page, not just the panel)
-- v2 — OCR input for PDFs and images (DOM-only today)
+- Wire M4 once an engine is enabled; validate the TL;DR quality.
+- v1.1 inline hover tooltips; v2 OCR input (DOM-only today).

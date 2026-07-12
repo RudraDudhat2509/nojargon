@@ -61,12 +61,13 @@ Target composition: ~7 / ~6 / ~7 across buckets so the set spans the range. This
 
 ---
 
-## M4 — Plain "what they do" rewrite quality *(LLM layer)*
+## M4 — TL;DR quality *(LLM layer — now carries the substance verdict)*
 
-**Claim under test:** the LLM prose is both accurate and actually jargon-free.
+**Claim under test:** the LLM's `tldr` is both accurate and actually jargon-free, and its `explainsWhatItDoes` judgment matches a human's.
 
-- **Metric:** fraction of the 20 golden pages where the `whatTheyDo` prose is **both** (a) accurate — human (Rudra) yes/no that it matches what the company does — **and** (b) jargon-free — contains **zero** terms from the M2 buzzword lexicon (automatable check).
-- **Target & citation:** ≥ **80%**. Grounded in plain-language practice: the goal is copy a non-expert understands, per the [US federal Plain Language guidelines (plainlanguage.gov)](https://www.plainlanguage.gov/guidelines/). The jargon-free half is measured mechanically against the same cited buzzword set as M2, so only the accuracy half is human-judged.
+- **Metric:** fraction of the 20 golden pages where the `tldr` is **both** (a) accurate — human yes/no that it matches what the company does — **and** (b) jargon-free — contains **zero** terms from the M2 buzzword lexicon (automatable check). Secondary: `explainsWhatItDoes` agreement with the human 1–3 label (labels 1 → false, 3 → true).
+- **Target & citation:** ≥ **80%** both-true. Grounded in plain-language practice — copy a non-expert understands, per the [US federal Plain Language guidelines (plainlanguage.gov)](https://www.plainlanguage.gov/guidelines/). The jargon-free half is measured mechanically against the same cited buzzword set as M2, so only accuracy is human-judged.
+- **Note:** since M1 killed the deterministic substance score, M4 is now the metric that validates the *substance verdict* — it is the wedge's correctness check, not just a nicety. Runnable once a free engine (Nano or Groq) is enabled.
 
 | Band | Condition | Action |
 |---|---|---|
@@ -76,11 +77,11 @@ Target composition: ~7 / ~6 / ~7 across buckets so the set spans the range. This
 
 ---
 
-## Why these four
+## Why these (post-pivot)
 
-- **M1** tests the *wedge* (substance-vs-vapor is real and correct).
-- **M2** tests the *coverage* (we catch the jargon that exists).
-- **M3** tests the *brand* (deterministic, reliable — the thing no incumbent has).
-- **M4** tests the *LLM layer* independently, with a kill band that still leaves a shippable product.
+- ~~**M1**~~ — killed 2026-07-12; substance is a semantic judgment, not a regex signal. The verdict moved to the LLM (M4).
+- **M2** tests the *coverage* (we catch the jargon that exists) — carries the deterministic wedge now.
+- **M3** tests the *brand* (deterministic, reliable — buzzword load + flags can't hallucinate).
+- **M4** tests the *substance verdict* (the LLM's TL;DR + "does it say what it does"), with a kill band that still leaves a shippable rules-only product.
 
-Every threshold (0.70, 90%, 0-variance, 80%) links a live source. The golden set is built once and reused for M1, M3, M4 and the engine tests — no redundant labeling.
+The golden set is built once and reused for M4 and the engine fixtures.
