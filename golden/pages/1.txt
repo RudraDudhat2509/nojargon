@@ -1,0 +1,451 @@
+What is the Fusion Cloud Applications Suite? (2:32)
+
+
+AI that runs the world’s business
+Oracle Fusion Cloud Applications reinvent how work works—helping you run your business and achieve successful outcomes at scale. Built into our complete suite of cloud applications, teams of AI agents reason, decide, and act across finance, supply chain, manufacturing, HR, sales, service, and marketing to execute end-to-end processes. Continuously updated with the latest innovations, Fusion helps you stay ahead of rapid change by scaling work with speed and precision.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Customers who drive growth and operational excellence using Fusion Applications
+
+
+
+
+
+
+Red Bull Racing connects its business end to end with AI to streamline decisions
+
+
+
+
+
+Heathrow unifies its back-office systems to improve operational efficiency and support growth
+
+
+
+
+
+Hearst modernizes finance and HR operations with AI to support growth
+
+
+
+
+
+
+
+
+
+
+
+
+Explore Oracle Fusion Cloud Applications
+
+
+
+
+
+Agentic applications for reinventing how work works
+
+
+With Fusion Agentic Applications and AI embedded across the suite, Fusion doesn’t just support work—it does the work. Our AI agents understand goals, make decisions, and take action, helping you move faster, reduce manual effort, and stay ahead of issues before they impact the business. And AI is built into every workflow.
+
+Explore Agentic Applications
+Explore AI agents
+Explore AI Agent Studio
+
+
+
+
+
+
+
+
+
+
+
+
+ERP applications with embedded AI for finance and supply chain
+
+
+Oracle Fusion Cloud Enterprise Resource Planning (ERP) applications automate and connect back-office operations, helping organizations quickly adapt to change. For finance, they streamline routine accounting, compliance, and close processes. For supply chain, they automate product innovation, procurement, and logistics work. By delivering touchless workflows, predictive insights, and continuous innovations—including AI—they help business leaders improve speed, accuracy, and control.
+
+Explore finance and accounting
+Explore supply chain and manufacturing
+
+
+
+
+
+
+
+
+
+
+
+
+HCM applications for managing complete employee experiences
+
+
+Oracle Fusion Cloud Human Capital Management (HCM) applications support employees from hire to retire. Solutions for onboarding, recruiting, scheduling, payroll, talent development, and more all work together to help HR leaders adapt to changing workforce needs, support managers, and deliver consistent employee experiences. With AI at its core, Fusion HCM applications support a human and AI-agent workforce.
+
+
+Explore Human Resources
+Explore Payroll
+
+
+
+
+
+
+
+
+
+
+
+CX applications for improving customer journeys, deals, and service with shared data
+
+
+As part of the Oracle Fusion Cloud Applications Suite, customer experience (CX) applications connect the customer journey end to end—from campaign to cash to care. Marketing targets the right buyers and improves engagement. Sales connects quote, order, and renewal in one flow to improve forecast and margin reliability. Service resolves issues faster with intelligent self-service, guided agent workspaces, and efficient field operations. The result: more conversions and renewals, lower service costs, and one way of working across the entire suite.
+
+Explore CX Sales
+Explore CX Service
+Explore CX Marketing
+
+
+
+
+
+
+
+
+
+
+
+Prebuilt analytics solutions for Fusion Cloud Applications
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Benefits of Oracle Fusion Cloud
+
+
+
+
+
+
+
+
+AI built in, not bolted on
+Built into Fusion Applications, AI agents and agentic applications operate within the same Fusion security and governance frameworks, with access to the same data and transactions. AI in Fusion delivers contextual insights, guides decisions, and takes action directly in the flow of work—reshaping business processes, accelerating productivity, and uncovering opportunities that drive measurable outcomes.
+
+
+
+The most complete suite
+Built on a unified data model, Fusion Applications help you see around corners by connecting your entire business—from finance and human resources to supply chain, manufacturing, sales, service, and marketing. Operating within end-to-end workflows, AI in Fusion works with full business context—not partial signals—enabling smarter decisions, faster execution, and better results.
+Fusion Cloud Applications Suite Solution Overview
+
+
+
+Innovation that matters
+Updated every ninety days, Fusion Applications are continuously evolving to help you stay ahead of what’s next. Fusion Agentic Applications represent a fundamental shift in software design, powered by teams of AI agents that execute end-to-end processes across the business, enabling organizations to scale work with speed and precision.
+
+
+
+The Oracle advantage
+Delivered on a fully integrated, AI-optimized technology stack with the highest-performing cloud services, Fusion Applications set the standard for performance, reliability, and security. With broad support for the world’s leading large language models, Fusion uniquely delivers enterprise-grade AI securely, reliably, and at scale.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Fusion Agentic Applications highlights
+
+
+
+
+
+
+Workforce Operations Command Center
+The Workforce Operations Command Center coordinates scheduling, time, and absence operations, simulating the downstream impact on shift coverage and compliance risks to guide decisions.
+
+
+
+
+Design-to-Source Workspace
+The Design-to-Source Workspace translates product specifications into qualified supplier options, simulates tradeoffs, and executes RFQs to reduce product cost, cycle time, and supply risk.
+
+
+
+
+Sourcing Command Center
+The Sourcing Command Center unifies negotiation management, empowering category managers to manage high-priority exceptions, make procurement decisions faster, and drive stronger savings.
+
+
+
+
+Sales Command Center
+The Sales Command Center continuously monitors what’s happening across accounts, highlights key changes or risks, and recommends practical next steps for each account and opportunity to accelerate deal cycles.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+What Analysts are saying about Oracle Applications
+
+
+
+
+
+
+ISG Software Research named Oracle a market leader in the 2025 ISG Research Buyers Guide™ for AI agents
+
+
+
+
+
+Gartner® named Oracle a Leader in Cloud ERP for Service-Centric Enterprises*
+
+
+
+
+
+Gartner® named Oracle a Leader in Cloud ERP for Product-Centric Enterprises**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gartner® named Oracle a Leader in Cloud HCM Suites for 1000+ Employee Enterprises***
+
+
+
+
+
+
+Gartner® named Oracle a Leader in Sales Force Automation Platforms****
+
+
+
+
+
+
+Gartner® named Oracle a Leader in Source-to-Pay Suites*****
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oracle Red Bull Racing: End-to-End Performance with Oracle Fusion
+
+Oracle EVP Steve Miranda talks with Jack Harington of Oracle Red Bull Racing about how embedded AI in Oracle Fusion Applications connects their business end to end—factory and trackside—streamlining decisions and strengthening global fan engagement through data-driven experiences.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oracle Applications customer successes
+See how leading companies around the world trust Oracle to run their mission-critical business functions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oracle Fusion Cloud Applications resources
+
+
+
+
+Learning
+
+Quarterly updates made easy
+A step-by-step plan for adopting Fusion Apps features
+26B roadmaps—agentic apps for finance, HR, SCM, and CX
+Oracle Fusion Applications AI Agent Marketplace
+
+
+
+Help Center
+
+Release notes
+Customer community
+
+
+
+Customer Success
+
+My Oracle Support (MOS)
+Training and certification
+Cloud Success Navigator
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gartner®, Magic Quadrant for Cloud ERP for Service-Centric Enterprises, October 13, 2025. Robert Anderson, Johan Jartelius, Tomas Kienast, Sam Grinter, Denis Torii, Chaithanya Paradarami.
+Gartner® Magic Quadrant™ for Cloud ERP for Product-Centric Enterprises, Greg Leiter, Tomas Kienast, Johan Jartelius, Denis Torii, Dennis Gaughan, 13 October 2025.
+Gartner, Magic Quadrant for Cloud HCM Suites for 1,000+ Employee Enterprises, Published 8 September 2025. Analysts: Josie Xing, Ranadip Chandra, Sam Grinter, Ron Hanscome, Harsh Kundulli, David Bobo, Chris Pang, Anand Chouksey, Laura Gardiner, Jackie Watrous, Stephanie Clement, Michelle Shapiro, Chris Hester, Jeff Freyermuth.
+Gartner, Magic Quadrant for Sales Force Automation, 21 July 2025, Adnan Zijadic, Guy Wood, Steve Rietberg, Wendy Butler-Mafuz
+Gartner® Magic Quadrant™ for Source to Pay Suites, Micky Keck, Kaitlynn Sommers, Lynne Phelan, Magnus Bergfors, Alex Brady, 21 January 2026
+
+Gartner does not endorse any vendor, product or service depicted in its research publications, and does not advise technology users to select only those vendors with the highest ratings or other designation. Gartner research publications consist of the opinions of Gartner’s research organization and should not be construed as statements of fact. Gartner disclaims all warranties, expressed or implied, with respect to this research, including any warranties of merchantability or fitness for a particular purpose.
+This graphic was published by Gartner, Inc. as part of a larger research document and should be evaluated in the context of the entire document. The Gartner document is available upon request from Oracle.
+GARTNER is a registered trademark and service mark, and MAGIC QUADRANT is a registered trademark of Gartner, Inc. and/or its affiliates in the U.S. and internationally and are used herein with permission. All rights reserved.

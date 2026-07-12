@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "No-Jargon",
+  "version": "0.1.0",
+  "description": "On-page due-diligence lens: what a company actually does, and which claims are empty.",
+  "permissions": ["sidePanel", "storage", "activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "action": { "default_title": "No-Jargon" },
+  "side_panel": { "default_path": "src/panel/panel.html" },
+  "background": { "service_worker": "src/background/service-worker.ts", "type": "module" },
+  "content_scripts": [
+    { "matches": ["<all_urls>"], "js": ["src/content/content-script.ts"], "run_at": "document_idle" }
+  ],
+  "minimum_chrome_version": "138"
+}
