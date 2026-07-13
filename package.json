@@ -7,7 +7,6 @@
     "build": "vite build",
     "dev": "vite build --watch",
     "test": "vitest run",
-    "eval:m1": "tsx eval/m1-spearman.ts",
     "golden:extract": "tsx golden/extract.ts"
   },
   "devDependencies": {

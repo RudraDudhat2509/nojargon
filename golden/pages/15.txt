@@ -109,13 +109,18 @@ Our users  us
 			
         
           
+            We process over 18,000 queries per second on over 300GB of user data on our PostgreSQL servers, and those numbers go up every month.
+            Gavin Roy, CTO, MyYearbook.com
+          
+        
+          
             PostgreSQL has the feature set of an enterprise level DBMS and should be strongly considered when researching both open source and commercial database servers.
             Lindsay Snider, Founding Partner, BitLeap LLC
           
         
           
-            We embed PostgreSQL in our Cloud Appliances and we rely on PostgreSQL in our Ubuntu packages. While the product supports multiple databases, 93% of Openbravo deployments are on PostgreSQL.
-            Paolo Juvara, CTO, Openbravo
+            "Our systems are deployed in high-availability environments and the combination of PostgreSQL on Linux has enabled us to deploy and support systems without any need for a large support team."
+            Tim Allen, Senior Software Developer, Proximity Group
           
         
           
@@ -124,13 +129,8 @@ Our users  us
           
         
           
-            PostgreSQL 9.3 provides features that as an app developer I can use immediately: better JSON functionality, regular expression indexing, easily federating databases with the Postgres foreign data wrapper ...
-            Jonathan S. Katz, VenueBook
-          
-        
-          
-            ... just like the FeedLounge guys I prefer PostgreSQL, and it's the database we'll be using for all future applications here at Joyent.
-            Michael Koziarski, Joyent
+            Zalando relies on the stability and performance of hundreds of PostgreSQL database servers to continuously serve millions of customers all around Europe.
+            Valentine Gogichashvili, Zalando Technologies
           
         
 			

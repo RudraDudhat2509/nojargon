@@ -1,9 +1,12 @@
 import type { LlmAdapter } from './adapter';
-import { PROMPT } from './adapter';
+import { SYSTEM, ENRICH_SCHEMA, parseEnrichment } from './adapter';
 
-// Chrome's on-device Prompt API (Gemini Nano). Declared here since it is not in @types/chrome.
+// Chrome's on-device Prompt API (Gemini Nano) — not in @types/chrome.
 declare const LanguageModel:
-  | { availability(): Promise<string>; create(): Promise<{ prompt(s: string): Promise<string> }> }
+  | {
+      availability(): Promise<string>;
+      create(o?: unknown): Promise<{ prompt(s: string, o?: unknown): Promise<string> }>;
+    }
   | undefined;
 
 export const NanoAdapter: LlmAdapter = {
@@ -16,8 +19,10 @@ export const NanoAdapter: LlmAdapter = {
     }
   },
   async enrich(mainText) {
-    const model = await LanguageModel!.create();
-    const whatTheyDo = (await model.prompt(PROMPT(mainText))).trim();
-    return { whatTheyDo, claimLabels: {} };
+    const session = await LanguageModel!.create({
+      initialPrompts: [{ role: 'system', content: SYSTEM }],
+    });
+    const raw = await session.prompt(mainText.slice(0, 4000), { responseConstraint: ENRICH_SCHEMA });
+    return parseEnrichment(raw);
   },
 };

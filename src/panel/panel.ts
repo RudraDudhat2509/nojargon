@@ -1,36 +1,49 @@
+import { score } from '../engine';
 import type { ScoreResult } from '../engine/types';
-import type { EnrichResponse, ExtractResponse } from '../shared/messages';
+import type { EnrichResponse } from '../shared/messages';
 
-function el(doc: Document, tag: string, attrs: Record<string, string> = {}): HTMLElement {
+// Runs IN the page via chrome.scripting.executeScript — must be fully self-contained
+// (no imports, no outer-scope references). Grabs visible product copy, skipping
+// analyst-citation / event-banner / promo noise; falls back to body text.
+function grabText(): string {
+  const NOISE =
+    /magic quadrant|gartner|omdia|forrester|that'?s a wrap|keynote|register now|apply now|get up to \$|in credits|©\s*\d{4}/i;
+  const parts: string[] = [];
+  document.querySelectorAll('h1, h2, h3, p, li').forEach((n) => {
+    const el = n as HTMLElement;
+    // Skip hidden nav/mega-menus so buzzwords aren't counted many times.
+    const visible = typeof el.checkVisibility === 'function' ? el.checkVisibility() : el.getClientRects().length > 0;
+    if (!visible) return;
+    const t = (n.textContent || '').trim();
+    if (t && !NOISE.test(t)) parts.push(t);
+  });
+  let text = parts.join('\n').trim();
+  if (text.length < 40) text = (document.body?.innerText || '').trim();
+  return text.length >= 40 ? text : '';
+}
+
+function el(doc: Document, tag: string, attrs: Record<string, string> = {}, text?: string): HTMLElement {
   const node = doc.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (text !== undefined) node.textContent = text;
   return node;
 }
 
+const GLYPH: Record<string, string> = { ok: '✓', bad: '✗', warn: '⚠' };
+
+function bullet(doc: Document, kind: 'ok' | 'bad' | 'warn', text: string): HTMLElement {
+  return el(doc, 'li', { class: `rc ${kind}` }, `${GLYPH[kind]} ${text}`);
+}
+
+// Deterministic "translations" section: each detected buzzword → its plain meaning.
 export function renderResult(root: HTMLElement, r: ScoreResult): void {
   const doc = root.ownerDocument;
   root.innerHTML = '';
-
-  const pct = r.substancePct;
-  const meter = el(doc, 'div', { 'data-testid': 'meter', class: 'meter' });
-  meter.textContent = pct === null ? 'No signal on this page' : `Substance ${pct}%  ·  Vapor ${100 - pct}%`;
-  root.appendChild(meter);
-
-  if (r.redFlags.length) {
-    const flags = el(doc, 'ul', { class: 'flags' });
-    for (const f of r.redFlags) {
-      const li = el(doc, 'li');
-      li.textContent = `🚩 ${f.message}`;
-      flags.appendChild(li);
-    }
-    root.appendChild(flags);
-  }
-
   if (r.claims.length) {
+    root.appendChild(el(doc, 'h2', {}, 'Buzzwords decoded'));
     const list = el(doc, 'ul', { class: 'claims' });
     for (const c of r.claims) {
-      const li = el(doc, 'li');
-      li.textContent = `${c.text} → ${c.plain}`;
+      const li = el(doc, 'li', {}, `${c.text} → ${c.plain}`);
       if (c.empty) li.classList.add('empty');
       list.appendChild(li);
     }
@@ -38,21 +51,44 @@ export function renderResult(root: HTMLElement, r: ScoreResult): void {
   }
 }
 
-export function renderEnrichment(root: HTMLElement, res: EnrichResponse): void {
+export function renderProseLoading(root: HTMLElement): void {
   const doc = root.ownerDocument;
+  root.querySelector('.prose')?.remove();
+  const box = el(doc, 'section', { class: 'prose loading' });
+  box.append(el(doc, 'h2', {}, 'TL;DR'), el(doc, 'p', { class: 'cta' }, 'Reading the page…'));
+  root.prepend(box);
+}
+
+// The fused card: LLM TL;DR (when available) + a reality check that combines the
+// LLM's read with our deterministic red flags and buzzword load.
+export function renderEnrichment(root: HTMLElement, res: EnrichResponse, result: ScoreResult): void {
+  const doc = root.ownerDocument;
+  root.querySelector('.prose')?.remove();
   const box = el(doc, 'section', { class: 'prose' });
+
   if (res.type === 'enriched') {
-    const h = el(doc, 'h2');
-    h.textContent = 'What they actually do';
-    const p = el(doc, 'p');
-    p.textContent = res.whatTheyDo;
-    box.append(h, p);
+    box.append(el(doc, 'h2', {}, 'TL;DR'), el(doc, 'p', { class: 'tldr' }, res.enrichment.tldr));
+    if (res.enrichment.audience) box.append(el(doc, 'p', { class: 'audience' }, `For: ${res.enrichment.audience}`));
   } else {
-    const p = el(doc, 'p', { class: 'cta' });
-    p.textContent =
-      'Add a Claude key for the plain-English rewrite. The substance score and red flags above work without it.';
-    box.appendChild(p);
+    box.append(
+      el(doc, 'p', { class: 'cta' },
+        'Turn on the free summary: enable on-device AI (chrome://flags → Gemini Nano) or add a free Groq key. The reality check below works without it.'),
+    );
   }
+
+  box.append(el(doc, 'h2', {}, 'Reality check'));
+  const ul = el(doc, 'ul', { class: 'reality' });
+  if (res.type === 'enriched') {
+    ul.append(
+      res.enrichment.explainsWhatItDoes
+        ? bullet(doc, 'ok', 'clearly says what it does')
+        : bullet(doc, 'bad', 'never actually says what it does'),
+    );
+  }
+  for (const f of result.redFlags) ul.append(bullet(doc, 'bad', f.message));
+  if (result.buzzwordLoad) ul.append(bullet(doc, 'warn', `buzzword load: ${result.buzzwordLoad} (${result.claims.length} found)`));
+  box.append(ul);
+
   root.prepend(box);
 }
 
@@ -60,18 +96,29 @@ async function run(): Promise<void> {
   const doc = globalThis.document;
   const root = doc.getElementById('root') as HTMLElement;
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const extracted = (await chrome.tabs.sendMessage(tab!.id!, { type: 'extract' })) as ExtractResponse;
-  if (extracted.type === 'no-content') {
+  if (!tab?.id) {
+    root.textContent = 'No active tab.';
+    return;
+  }
+
+  let mainText = '';
+  try {
+    const [inj] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: grabText });
+    mainText = (inj?.result as string) ?? '';
+  } catch {
+    root.textContent = "Can't read this page (browser/system pages are off-limits).";
+    return;
+  }
+  if (!mainText) {
     root.textContent = 'No company copy found on this page.';
     return;
   }
-  renderResult(root, extracted.result);
-  const enrich = (await chrome.runtime.sendMessage({
-    type: 'enrich',
-    mainText: extracted.mainText,
-    claims: extracted.result.claims,
-  })) as EnrichResponse;
-  renderEnrichment(root, enrich);
+
+  const result = score(mainText);
+  renderResult(root, result);
+  renderProseLoading(root);
+  const enrich = (await chrome.runtime.sendMessage({ type: 'enrich', mainText })) as EnrichResponse;
+  renderEnrichment(root, enrich, result);
 }
 
 if (typeof chrome !== 'undefined' && chrome.tabs) {

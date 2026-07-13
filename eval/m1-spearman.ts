@@ -1,12 +1,9 @@
-import { readFileSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { score } from '../src/engine/index';
-
 /**
- * Spearman rank correlation with tie correction. The M1 data is tie-heavy
- * (labels are only 1/2/3 and many scores repeat), so the no-ties formula
- * 1-6Σd²/n(n²-1) is invalid — compute Pearson correlation over average ranks.
+ * Spearman rank correlation with tie correction (Pearson over average ranks).
+ * Retained as a general eval utility. NOTE: the M1 substance-validity metric it
+ * originally served was KILLED (ρ=0.227) — see metrics-justification.md M1 /
+ * learnings.md. The deterministic layer no longer emits a substance score to
+ * correlate; this function stays for future evals (e.g. M4).
  */
 function averageRanks(a: number[]): number[] {
   const idx = a.map((v, i) => [v, i] as const).sort((p, q) => p[0] - q[0]);
@@ -41,46 +38,4 @@ export function spearman(xs: number[], ys: number[]): number {
   }
   if (vx === 0 || vy === 0) return 0; // no variance (constant series) → undefined correlation
   return cov / Math.sqrt(vx * vy);
-}
-
-function band(rho: number): string {
-  if (rho >= 0.7) return 'PASS (>= 0.70, strong)';
-  if (rho >= 0.5) return 'ITERATE (0.50-0.70) — reweight lexicon / add concrete-signal detectors';
-  return 'KILL (< 0.50) — deterministic-score premise too weak, reconsider';
-}
-
-// main(): score the extracted golden pages, correlate with human labels, print the band.
-function main(): void {
-  const here = dirname(fileURLToPath(import.meta.url));
-  const labelsPath = join(here, '..', 'golden', 'labels.json');
-  if (!existsSync(labelsPath)) {
-    console.error('golden/labels.json not found. Run `npm run golden:extract` and fill in labels.');
-    process.exit(1);
-  }
-  const labels: { url: string; label: number | null }[] = JSON.parse(readFileSync(labelsPath, 'utf8'));
-  const pagesDir = join(here, '..', 'golden', 'pages');
-
-  const humans: number[] = [];
-  const scores: number[] = [];
-  labels.forEach((row, i) => {
-    if (row.label == null) return;
-    const file = join(pagesDir, `${i}.txt`);
-    if (!existsSync(file)) return;
-    const pct = score(readFileSync(file, 'utf8')).substancePct;
-    if (pct == null) return;
-    humans.push(row.label);
-    scores.push(pct);
-  });
-
-  if (humans.length < 3) {
-    console.error(`Only ${humans.length} labeled+extracted pages. Need at least 3 to compute rho.`);
-    process.exit(1);
-  }
-  const rho = spearman(scores, humans);
-  console.log(`n=${humans.length}  Spearman rho=${rho.toFixed(3)}`);
-  console.log(`M1: ${band(rho)}`);
-}
-
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('m1-spearman.ts')) {
-  main();
 }

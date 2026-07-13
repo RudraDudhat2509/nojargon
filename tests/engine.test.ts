@@ -11,16 +11,20 @@ const SUBSTANCE =
   'per month, and is used by Acme Corp and Bluebird Ltd. It supports 12 integrations and a REST API.';
 
 describe('engine', () => {
-  it('scores fluff low and substance high (validity direction)', () => {
-    expect(score(FLUFF).substancePct!).toBeLessThan(score(SUBSTANCE).substancePct!);
+  it('flags heavy buzzword copy as high load', () => {
+    expect(score(FLUFF).buzzwordLoad).toBe('high');
   });
 
-  it('returns null when there is no signal', () => {
-    expect(score('the and of to a').substancePct).toBeNull();
+  it('flags concrete dev copy as low load', () => {
+    expect(score(SUBSTANCE).buzzwordLoad).toBe('low');
+  });
+
+  it('returns null load when there is essentially no text', () => {
+    expect(score('the and of to a').buzzwordLoad).toBeNull();
   });
 
   it('is deterministic across 100 runs (M3)', () => {
-    const runs = Array.from({ length: 100 }, () => score(FLUFF).substancePct);
+    const runs = Array.from({ length: 100 }, () => score(FLUFF).buzzwordLoad);
     expect(new Set(runs).size).toBe(1);
   });
 
