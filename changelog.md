@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 — 2026-07-13 (UX + voice pass, founder accuracy, funding)
+
+- **Voice**: the summary is now blunt and dryly funny ("the blunt friend a VC brings along") — with a hard prompt rule: *brutal about the marketing, never about facts.*
+- **Readability**: dropped the gold-on-black theme for a high-contrast, readable panel (system font, neutral palette, neutral dark variant). Removed all emoji section headers; ✓/✕/! markers moved to CSS so text stays clean and copyable.
+- **Sources** now live in a `<details>` card, collapsed by default.
+- **Founder accuracy (M5: PASS 10/10)**: queries are anchored to the domain, killing the same-name conflation (the "Matt Rosen of Allata" bug). Claims with no corroborating source get an explicit **Unverified** badge rather than being asserted as fact.
+- **Funding & traction** section added — **⚠️ ships with a known defect (M6: 70%, below the 80% gate)**. It systematically misreports **public** companies (Cloudflare → "private") and **bootstrapped** ones (Plausible → "VC-backed") because the answer engine assumes every company is VC-backed. `verified` does not catch this. **Treat the funding line as unreliable for non-VC-backed companies** until the decomposed status query is tried. See `metrics-justification.md` M6.
+- Guard added: Tavily queries are bounded to 400 chars (an over-long query silently 400'd an entire eval run); API errors now surface their message.
+- 64 tests.
+
 ## 0.4.0 — 2026-07-13 (VC company brief)
 
 - **Reframed the product**: from "de-jargon this page" to a **plain-English company brief for VCs** — what they do, who the founders are, reputation, legitimacy — because paraphrasing a company's own marketing is inherently low-value.
