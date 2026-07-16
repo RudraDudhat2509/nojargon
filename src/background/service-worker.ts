@@ -20,8 +20,8 @@ export async function handleEnrich(mainText: string, adapters: LlmAdapter[]): Pr
 export interface BriefDeps {
   enrich: (mainText: string) => Promise<EnrichResponse>;
   receipts: (domain: string) => Promise<Receipts>;
-  founders: (company: string) => Promise<Finding>;
-  reputation: (company: string) => Promise<Finding>;
+  founders: (company: string, domain: string) => Promise<Finding>;
+  reputation: (company: string, domain: string) => Promise<Finding>;
 }
 
 const orNull = <T>(r: PromiseSettledResult<T>): T | null => (r.status === 'fulfilled' ? r.value : null);
@@ -35,8 +35,8 @@ export async function assembleBrief(url: string, mainText: string, deps: BriefDe
   const [whatTheyDo, receipts, foundersRes, reputationRes] = await Promise.allSettled([
     deps.enrich(mainText),
     deps.receipts(domain),
-    deps.founders(company),
-    deps.reputation(company),
+    deps.founders(company, domain),
+    deps.reputation(company, domain),
   ]);
 
   return {

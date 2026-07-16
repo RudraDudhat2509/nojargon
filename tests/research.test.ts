@@ -1,5 +1,27 @@
 import { describe, it, expect } from 'vitest';
-import { parseTavily, foundersQuery, reputationQuery } from '../src/research/tavily';
+import { parseTavily, foundersQuery, reputationQuery, isVerified } from '../src/research/tavily';
+
+describe('isVerified (same-name conflation guard)', () => {
+  const subject = { domain: 'altagic.com', company: 'Altagic' };
+
+  it('verifies when a source references the company domain', () => {
+    expect(isVerified([{ title: 'Rajat Sharma - altagic.com', url: 'https://x.com/a' }], subject)).toBe(true);
+  });
+
+  it('verifies when a source title names the company', () => {
+    expect(isVerified([{ title: 'Altagic on Crunchbase', url: 'https://cb.com/altagic' }], subject)).toBe(true);
+  });
+
+  it('does NOT verify a same-named exec at a different company (the Allata bug)', () => {
+    expect(
+      isVerified([{ title: 'Matt Rosen, Founder & CEO of Allata | The Jeff Crilley Show', url: 'https://yt.com/x' }], subject),
+    ).toBe(false);
+  });
+
+  it('is verified by default when no subject is given', () => {
+    expect(isVerified([{ title: 'x', url: 'https://x.com' }])).toBe(true);
+  });
+});
 
 describe('parseTavily', () => {
   it('parses the answer and source links', () => {
@@ -31,13 +53,16 @@ describe('parseTavily', () => {
 });
 
 describe('query builders', () => {
-  it('asks who founded the company', () => {
-    expect(foundersQuery('Stripe')).toMatch(/founded|founder/i);
-    expect(foundersQuery('Stripe')).toContain('Stripe');
+  it('anchors the founders query to the domain, not just the name', () => {
+    const q = foundersQuery('Altagic', 'altagic.com');
+    expect(q).toMatch(/founded|founder/i);
+    expect(q).toContain('Altagic');
+    expect(q).toContain('altagic.com'); // the fix for same-name conflation
   });
 
-  it('asks what people say about the company', () => {
-    expect(reputationQuery('Stripe')).toMatch(/review|complaint|reputation/i);
-    expect(reputationQuery('Stripe')).toContain('Stripe');
+  it('anchors the reputation query to the domain too', () => {
+    const q = reputationQuery('Stripe', 'stripe.com');
+    expect(q).toMatch(/review|complaint|reputation/i);
+    expect(q).toContain('stripe.com');
   });
 });

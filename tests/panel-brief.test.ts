@@ -16,8 +16,8 @@ const fullBrief: Brief = {
   company: 'Stripe',
   whatTheyDo: { type: 'enriched', enrichment: { tldr: 'Payment software for online businesses.', explainsWhatItDoes: true, audience: 'developers' } },
   receipts: { registeredYear: 2010, domainAgeYears: 16, onlineSinceYear: 2011 },
-  founders: { answer: 'Founded by Patrick and John Collison.', sources: [{ title: 'About', url: 'https://about.com' }] },
-  reputation: { answer: 'Devs praise the API; gripes about account freezes.', sources: [{ title: 'Reddit', url: 'https://reddit.com/x' }] },
+  founders: { answer: 'Founded by Patrick and John Collison.', sources: [{ title: 'About', url: 'https://about.com' }], verified: true },
+  reputation: { answer: 'Devs praise the API; gripes about account freezes.', sources: [{ title: 'Reddit', url: 'https://reddit.com/x' }], verified: true },
 };
 
 const root = () => {
@@ -53,6 +53,25 @@ describe('renderBrief', () => {
     // Collapsed by default: no `open` attribute.
     expect(details.every((d) => !d.hasAttribute('open'))).toBe(true);
     expect(details[0]!.querySelector('summary')?.textContent).toBe('1 source');
+  });
+
+  it('warns when a researched claim is unverified instead of asserting it', () => {
+    const r = root();
+    renderBrief(
+      r,
+      { ...fullBrief, founders: { answer: 'Matt Rosen is the CEO.', sources: [{ title: 'CEO of Allata', url: 'https://x.com' }], verified: false } },
+      score,
+    );
+    expect(r.querySelector('.unverified')).toBeTruthy();
+    expect(r.textContent).toContain('Unverified');
+    // The claim is still shown (with its sources) — flagged, not hidden.
+    expect(r.textContent).toContain('Matt Rosen is the CEO.');
+  });
+
+  it('shows no unverified warning when the claim is corroborated', () => {
+    const r = root();
+    renderBrief(r, fullBrief, score);
+    expect(r.querySelector('.unverified')).toBeNull();
   });
 
   it('uses no emoji in section headers', () => {

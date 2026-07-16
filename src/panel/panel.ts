@@ -1,7 +1,7 @@
 import { score } from '../engine';
 import { domainOf, companyNameFrom } from '../receipts';
 import type { ScoreResult } from '../engine/types';
-import type { Source } from '../research/tavily';
+import type { Source, Finding } from '../research/tavily';
 import type { Brief } from '../shared/messages';
 
 // Runs IN the page via chrome.scripting.executeScript — must be fully self-contained
@@ -57,6 +57,21 @@ function section(doc: Document, title: string): HTMLElement {
   return s;
 }
 
+// A researched claim renders its answer, its sources, and — when no source
+// actually corroborates *this* company — an explicit unverified warning.
+// Naming the wrong CEO with confidence is worse than saying "unconfirmed".
+function researchSection(doc: Document, title: string, f: Finding): HTMLElement {
+  const s = section(doc, title);
+  if (!f.verified) {
+    s.appendChild(
+      el(doc, 'p', { class: 'unverified' }, 'Unverified — no source clearly ties this to this company. Treat with suspicion.'),
+    );
+  }
+  s.appendChild(el(doc, 'p', {}, f.answer));
+  if (f.sources.length) s.appendChild(sourceLinks(doc, f.sources));
+  return s;
+}
+
 export function renderBrief(root: HTMLElement, brief: Brief, r: ScoreResult): void {
   const doc = root.ownerDocument;
   root.innerHTML = '';
@@ -76,20 +91,10 @@ export function renderBrief(root: HTMLElement, brief: Brief, r: ScoreResult): vo
   root.appendChild(what);
 
   // Founders (research)
-  if (brief.founders) {
-    const s = section(doc, 'Founders');
-    s.appendChild(el(doc, 'p', {}, brief.founders.answer));
-    if (brief.founders.sources.length) s.appendChild(sourceLinks(doc, brief.founders.sources));
-    root.appendChild(s);
-  }
+  if (brief.founders) root.appendChild(researchSection(doc, 'Founders', brief.founders));
 
   // Reputation (research)
-  if (brief.reputation) {
-    const s = section(doc, 'Reputation');
-    s.appendChild(el(doc, 'p', {}, brief.reputation.answer));
-    if (brief.reputation.sources.length) s.appendChild(sourceLinks(doc, brief.reputation.sources));
-    root.appendChild(s);
-  }
+  if (brief.reputation) root.appendChild(researchSection(doc, 'Reputation', brief.reputation));
 
   // Legitimacy (zero-key receipts)
   const rc = brief.receipts;

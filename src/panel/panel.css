@@ -177,3 +177,13 @@ body {
 .claims li.empty {
   border-left-color: var(--bad);
 }
+
+.unverified {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--warn);
+  background: var(--raised);
+  border-left: 3px solid var(--warn);
+  border-radius: 0 4px 4px 0;
+  padding: 6px 10px;
+}
