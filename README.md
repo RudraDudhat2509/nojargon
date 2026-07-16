@@ -1,88 +1,84 @@
 # No-Jargon
 
-A bullshit detector for company websites. Click the icon on any company page and a side panel tells you — in plain English — **what they actually do**, whether they even *say* what they do, and where they're blowing smoke. Free, private, and it doesn't make things up.
+**A plain-English company brief for VCs.** Land on any company or startup site, click once, and get what you'd otherwise open ten tabs for: what they actually do (de-jargoned), **who the founders are**, **what people really say about them**, and **how legit/established they are** — with sources.
 
-Not another AI summarizer. The question it answers isn't "can you shorten this" — it's **"is there anything real underneath the marketing?"**
+Not a summarizer. Paraphrasing a company's own marketing is worthless — they wrote it. The value is the **independent signal they're not putting on their homepage.**
 
-## What you get
-
-A single card:
+## The brief
 
 ```
-TL;DR
-They automate busywork by wiring your apps together.
-For: small teams
-
-Reality check
-  ✓ clearly says what it does        ← the AI's read
-  ✗ no named customers                ← deterministic flag
-  ✗ no pricing shown                  ← deterministic flag
-  ⚠ buzzword load: high (14 found)    ← deterministic
-
-Buzzwords decoded
-  cutting-edge → new
-  orchestrate → coordinate
-  enterprise-grade → (vague — "serious enough for big companies")
+STRIPE
+💡 What they do    Payment software for online businesses.
+👤 Founders        Patrick and John Collison founded Stripe in 2010…   [sources]
+💬 Reputation      Devs praise the API; complaints about support.      [reddit] [trustpilot]
+🧾 Legitimacy      ✓ Domain 16 yrs old (registered 2010)
+                   ✓ Online since 2011 (web archive)
+📣 Marketing       ✓ clearly says what it does
+                   ⚠ buzzword load: medium (3 found)
+Buzzwords decoded  seamless → works without extra setup
 ```
 
-The **TL;DR** and the "does it say what it does" line come from the AI. **Everything else — the flags, the buzzword load, the translations — is plain deterministic code that can't hallucinate.** So when it says "no named customers," that's a fact, not a guess.
+**Every external claim carries source links.** In a due-diligence tool, an unsourced claim is worthless.
 
-## Free & private — no paid key
+## Where each section comes from
 
-The summary runs on free engines, in this order:
+| Section | Source | Key? | Leaves your machine? |
+|---|---|---|---|
+| What they do, Buzzwords, Marketing honesty | Local page read + on-device/Groq LLM | free | no (Nano) / page text only (Groq) |
+| **Founders, Reputation** | Tavily search (free 1,000/mo) | free key | company name → Tavily |
+| **Legitimacy** (domain age, web history) | RDAP + Wayback | **none** | domain only |
 
-1. **Gemini Nano** — Chrome's built-in on-device AI. No key, no cost, nothing leaves your machine. Zero setup once enabled. *(Needs Chrome 138+, ~4GB model, 22GB free disk, capable hardware.)*
-2. **Groq** — a free hosted fallback for machines that can't run Nano. Free API key, no credit card.
-3. **Rules only** — if neither is on, the reality check + buzzwords still work; only the TL;DR line is hidden.
+No paid path anywhere. Sections degrade independently — no key or a failed lookup hides *that section*, never the card.
 
-There is no paid path. (An earlier build used a paid Claude key — removed.)
-
-### Turning on the summary
-
-**Nano (recommended):** enable `chrome://flags/#prompt-api-for-gemini-nano` and the on-device model component, restart Chrome, let the model download.
-
-**Groq (fallback):** get a free key at console.groq.com (no card), then in the panel's DevTools console:
-```js
-chrome.storage.local.set({ groqKey: 'gsk_YOUR_KEY' })
-```
-
-## Install (unpacked)
+## Setup
 
 ```bash
-npm install
-npm run build            # → dist/
+npm install && npm run build          # → dist/
 ```
-Chrome → `chrome://extensions` → Developer mode → **Load unpacked** → select `dist/`. Open a company page in a **fresh** tab and click the icon.
+Chrome → `chrome://extensions` → Developer mode → **Load unpacked** → `dist/`.
+
+Then add the free keys (panel → right-click → Inspect → Console):
+```js
+chrome.storage.local.set({ groqKey: 'gsk_…' })    // console.groq.com — free, no card
+chrome.storage.local.set({ tavilyKey: 'tvly-…' }) // tavily.com — free 1000/mo, no card
+```
+Prefer fully-private? Enable Chrome's on-device AI (`chrome://flags/#prompt-api-for-gemini-nano`) instead of Groq. Legitimacy needs no key at all.
 
 ## How it works
 
 ```
-click icon → content script extracts the page's main copy (Readability,
-             with a fallback for hero pages + citation/banner filtering)
-           → engine.score(text)  [deterministic: buzzwords + flags + buzzword load]
-           → panel renders the reality check + decoded buzzwords instantly
-           → background picks an engine (Nano → Groq → none)
-           → the LLM returns 3 structured fields; panel fills in the TL;DR
+click → panel injects a reader into the page (chrome.scripting)
+      → local: de-jargon + buzzword decode + red flags   [instant, no network]
+      → parallel fan-out:
+           LLM  → what they do (structured: tldr / says-what-it-does / audience)
+           RDAP + Wayback → domain age, web history      [zero-key]
+           Tavily → founders, reputation + sources
+      → render brief; any failed section is simply omitted
 ```
+The LLM only ever returns 3 schema-constrained fields — it can't wander into freeform slop. The buzzword decode, red flags, and legitimacy are plain deterministic code that can't hallucinate.
 
-The LLM only ever returns `{ tldr, explainsWhatItDoes, audience }` (structured, schema-constrained) — it can't wander into freeform slop.
-
-## Metrics (see `metrics-justification.md`)
+## Metrics (`metrics-justification.md`)
 
 | Metric | What | Status |
 |---|---|---|
-| **M2** buzzword coverage | % of published fluff lists detected | ✅ 100% |
+| **M2** buzzword coverage | % of published fluff lists caught | ✅ 100% |
 | **M3** determinism | buzzword-load variance over 100 runs | ✅ 0 |
-| ~~**M1** substance %~~ | deterministic substance score vs human labels | ⛔ **killed** (ρ=0.23) — retired; substance is now the LLM's job, see `learnings.md` |
-| **M4** TL;DR quality | accurate + buzzword-free on the golden set | ⏳ pending an enabled engine |
+| ~~**M1** substance %~~ | deterministic substance score | ⛔ killed (ρ=0.23) — substance is the LLM's job now |
+| **M4** TL;DR quality | accurate + buzzword-free | ⏳ |
+| **M5** brief usefulness | founders correct ≥80%, 100% sourced | ⏳ known gaps logged |
+
+## Known issues
+- Founders can conflate a same-named exec at another company → fix: domain-scoped queries (M5 lever).
+- Wayback "online since" may reflect a **previous domain owner** → cross-check against registration year.
+- RDAP returns no registration event for some domains → age blank.
 
 ## Develop
-
 ```bash
-npm test                 # Vitest — 38 tests
-npm run dev              # vite build --watch
+npm test        # Vitest — 54 tests
+npm run dev     # vite build --watch
 ```
 
 ## Roadmap
-- Wire M4 once an engine is enabled; validate the TL;DR quality.
-- v1.1 inline hover tooltips; v2 OCR input (DOM-only today).
+- UX pass: quieter visual design, fewer emojis, collapsible sources, editable sections.
+- Punchier, more brutally-honest summary voice.
+- v2: OCR input (DOM-only today).

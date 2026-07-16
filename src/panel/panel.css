@@ -35,6 +35,50 @@ body {
   font-style: italic;
 }
 
+.company {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0 0 14px;
+  color: #d9b56a;
+}
+
+.sec {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #26262b;
+}
+
+.sec:last-child {
+  border-bottom: none;
+}
+
+.sec h2 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a8780;
+}
+
+.sec p {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.sources {
+  font-size: 12px;
+}
+
+.sources a {
+  color: #d9b56a;
+  text-decoration: none;
+}
+
+.sources a:hover {
+  text-decoration: underline;
+}
+
 .prose .tldr {
   font-size: 16px;
   font-weight: 600;

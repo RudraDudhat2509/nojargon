@@ -1,7 +1,9 @@
 import { selectAdapter, type LlmAdapter } from '../llm/adapter';
 import { NanoAdapter } from '../llm/nano';
 import { GroqAdapter } from '../llm/groq';
-import type { EnrichResponse } from '../shared/messages';
+import { domainOf, companyNameFrom, fetchReceipts, type Receipts } from '../receipts';
+import { founders, reputation, type Finding } from '../research/tavily';
+import type { Brief, EnrichResponse } from '../shared/messages';
 
 export async function handleEnrich(mainText: string, adapters: LlmAdapter[]): Promise<EnrichResponse> {
   const adapter = await selectAdapter(adapters);
@@ -15,13 +17,56 @@ export async function handleEnrich(mainText: string, adapters: LlmAdapter[]): Pr
   }
 }
 
+export interface BriefDeps {
+  enrich: (mainText: string) => Promise<EnrichResponse>;
+  receipts: (domain: string) => Promise<Receipts>;
+  founders: (company: string) => Promise<Finding>;
+  reputation: (company: string) => Promise<Finding>;
+}
+
+const orNull = <T>(r: PromiseSettledResult<T>): T | null => (r.status === 'fulfilled' ? r.value : null);
+
+// Fan out every section in parallel. One source being down, rate-limited, or
+// key-less must never take the whole brief with it.
+export async function assembleBrief(url: string, mainText: string, deps: BriefDeps): Promise<Brief> {
+  const domain = domainOf(url);
+  const company = companyNameFrom(domain);
+
+  const [whatTheyDo, receipts, foundersRes, reputationRes] = await Promise.allSettled([
+    deps.enrich(mainText),
+    deps.receipts(domain),
+    deps.founders(company),
+    deps.reputation(company),
+  ]);
+
+  return {
+    company,
+    whatTheyDo: orNull(whatTheyDo) ?? { type: 'no-llm' },
+    receipts: orNull(receipts),
+    founders: orNull(foundersRes),
+    reputation: orNull(reputationRes),
+  };
+}
+
 if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
   chrome.action?.onClicked.addListener((tab) => {
     if (tab.windowId != null) chrome.sidePanel.open({ windowId: tab.windowId });
   });
+
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-    if (msg?.type !== 'enrich') return;
-    handleEnrich(msg.mainText, [NanoAdapter, GroqAdapter]).then(sendResponse);
-    return true;
+    if (msg?.type === 'enrich') {
+      handleEnrich(msg.mainText, [NanoAdapter, GroqAdapter]).then(sendResponse);
+      return true;
+    }
+    if (msg?.type === 'brief') {
+      assembleBrief(msg.url, msg.mainText, {
+        enrich: (t) => handleEnrich(t, [NanoAdapter, GroqAdapter]),
+        receipts: (d) => fetchReceipts(d),
+        founders,
+        reputation,
+      }).then(sendResponse);
+      return true;
+    }
+    return;
   });
 }

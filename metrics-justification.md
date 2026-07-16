@@ -77,6 +77,26 @@ Target composition: ~7 / ~6 / ~7 across buckets so the set spans the range. This
 
 ---
 
+---
+
+## M5 — Brief usefulness *(the v0.4 VC gate)*
+
+**Claim under test:** the brief tells a VC something true and useful they'd otherwise open ten tabs for.
+
+- **Metric:** on 10 known companies — (a) **founders correct** (human yes/no), (b) **every external claim carries ≥1 source link** (auto-checkable: `sources.length > 0`), (c) **legitimacy age within ±1yr** of a manual WHOIS check.
+- **Targets:** founders ≥ **80%** correct · sourcing **100%** · age accurate ≥ **90%**.
+
+| Band | Condition | Action |
+|---|---|---|
+| ✅ **Pass** | founders ≥80% + 100% sourced | Ship the brief. |
+| 🔧 **Iterate** | founders 60–80% | **Lever:** scope the query to the domain (`site:`/company+domain) instead of the bare name — the observed failure is same-name conflation across companies. |
+| ⛔ **Kill (founders only)** | < 60% correct | Hide the founders section by default; the rest of the brief still ships. A confidently wrong founder is worse than no founder. |
+
+**Known failures already logged (2026-07-13 first live run):**
+- *Same-name conflation* — "Matt Rosen, Founder & CEO of **Allata**" surfaced as Altagic's CEO. The founders query uses the bare company name, so a same-named exec elsewhere wins. → the M5 iterate lever.
+- *Previous-owner history* — Wayback said stripe.com was "online since 1996" (a prior owner's parked page). Cross-check `onlineSinceYear` against `registeredYear` and suppress/flag when it precedes registration.
+- *RDAP gaps* — some domains (stripe.com) return no registration event, leaving age blank.
+
 ## Why these (post-pivot)
 
 - ~~**M1**~~ — killed 2026-07-12; substance is a semantic judgment, not a regex signal. The verdict moved to the LLM (M4).
