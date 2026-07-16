@@ -45,6 +45,24 @@ describe('renderBrief', () => {
     expect(hrefs).toContain('https://reddit.com/x');
   });
 
+  it('tucks sources into a collapsed card so they never crowd the read', () => {
+    const r = root();
+    renderBrief(r, fullBrief, score);
+    const details = [...r.querySelectorAll('details.sources')];
+    expect(details.length).toBe(2); // founders + reputation
+    // Collapsed by default: no `open` attribute.
+    expect(details.every((d) => !d.hasAttribute('open'))).toBe(true);
+    expect(details[0]!.querySelector('summary')?.textContent).toBe('1 source');
+  });
+
+  it('uses no emoji in section headers', () => {
+    const r = root();
+    renderBrief(r, fullBrief, score);
+    const headers = [...r.querySelectorAll('h2')].map((h) => h.textContent ?? '');
+    expect(headers).toContain('Founders');
+    expect(headers.some((h) => /\p{Extended_Pictographic}/u.test(h))).toBe(false);
+  });
+
   it('omits sections that are null rather than showing them empty', () => {
     const r = root();
     renderBrief(r, { ...fullBrief, founders: null, reputation: null, receipts: null }, score);

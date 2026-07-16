@@ -31,21 +31,24 @@ function el(doc: Document, tag: string, attrs: Record<string, string> = {}, text
   return node;
 }
 
-const GLYPH: Record<string, string> = { ok: '✓', bad: '✗', warn: '⚠' };
-
+// The ✓/✕/! marker is drawn by CSS (::before), so the text stays clean and copyable.
 function bullet(doc: Document, kind: 'ok' | 'bad' | 'warn', text: string): HTMLElement {
-  return el(doc, 'li', { class: `rc ${kind}` }, `${GLYPH[kind]} ${text}`);
+  return el(doc, 'li', { class: `rc ${kind}` }, text);
 }
 
-// In a due-diligence tool an unsourced external claim is worthless — every
-// research answer renders its links.
+// In a due-diligence tool an unsourced external claim is worthless — but the links
+// shouldn't crowd the read either. Collapsed by default, one click to open.
 function sourceLinks(doc: Document, sources: Source[]): HTMLElement {
-  const p = el(doc, 'p', { class: 'sources' });
-  sources.forEach((s, i) => {
-    p.appendChild(el(doc, 'a', { href: s.url, target: '_blank', rel: 'noreferrer' }, s.title));
-    if (i < sources.length - 1) p.appendChild(doc.createTextNode(' · '));
-  });
-  return p;
+  const box = el(doc, 'details', { class: 'sources' });
+  box.appendChild(el(doc, 'summary', {}, `${sources.length} source${sources.length === 1 ? '' : 's'}`));
+  const ul = el(doc, 'ul');
+  for (const s of sources) {
+    const li = el(doc, 'li');
+    li.appendChild(el(doc, 'a', { href: s.url, target: '_blank', rel: 'noreferrer' }, s.title));
+    ul.appendChild(li);
+  }
+  box.appendChild(ul);
+  return box;
 }
 
 function section(doc: Document, title: string): HTMLElement {
@@ -59,8 +62,8 @@ export function renderBrief(root: HTMLElement, brief: Brief, r: ScoreResult): vo
   root.innerHTML = '';
   if (brief.company) root.appendChild(el(doc, 'h1', { class: 'company' }, brief.company));
 
-  // 💡 What they do (local page de-jargon)
-  const what = section(doc, '💡 What they do');
+  // What they do (local page de-jargon)
+  const what = section(doc, 'What they do');
   if (brief.whatTheyDo.type === 'enriched') {
     what.appendChild(el(doc, 'p', { class: 'tldr' }, brief.whatTheyDo.enrichment.tldr));
     const aud = brief.whatTheyDo.enrichment.audience;
@@ -72,26 +75,26 @@ export function renderBrief(root: HTMLElement, brief: Brief, r: ScoreResult): vo
   }
   root.appendChild(what);
 
-  // 👤 Founders (research)
+  // Founders (research)
   if (brief.founders) {
-    const s = section(doc, '👤 Founders');
+    const s = section(doc, 'Founders');
     s.appendChild(el(doc, 'p', {}, brief.founders.answer));
     if (brief.founders.sources.length) s.appendChild(sourceLinks(doc, brief.founders.sources));
     root.appendChild(s);
   }
 
-  // 💬 Reputation (research)
+  // Reputation (research)
   if (brief.reputation) {
-    const s = section(doc, '💬 Reputation');
+    const s = section(doc, 'Reputation');
     s.appendChild(el(doc, 'p', {}, brief.reputation.answer));
     if (brief.reputation.sources.length) s.appendChild(sourceLinks(doc, brief.reputation.sources));
     root.appendChild(s);
   }
 
-  // 🧾 Legitimacy (zero-key receipts)
+  // Legitimacy (zero-key receipts)
   const rc = brief.receipts;
   if (rc && (rc.domainAgeYears != null || rc.onlineSinceYear != null)) {
-    const s = section(doc, '🧾 Legitimacy');
+    const s = section(doc, 'Legitimacy');
     const ul = el(doc, 'ul', { class: 'reality' });
     if (rc.domainAgeYears != null) {
       const young = rc.domainAgeYears < 1;
@@ -104,8 +107,8 @@ export function renderBrief(root: HTMLElement, brief: Brief, r: ScoreResult): vo
     root.appendChild(s);
   }
 
-  // 📣 Marketing honesty (local)
-  const m = section(doc, '📣 Marketing honesty');
+  // Marketing honesty (local)
+  const m = section(doc, 'Marketing honesty');
   const ul = el(doc, 'ul', { class: 'reality' });
   if (brief.whatTheyDo.type === 'enriched') {
     ul.appendChild(
