@@ -61,9 +61,11 @@ export function reputationQuery(company: string, domain: string): string {
 // silence would read as "we failed to look".
 export function fundingQuery(company: string, domain: string): string {
   return (
-    `How much funding has ${company} (${domain}) raised? State the latest round, amount, lead investors, date, ` +
-    `and roughly how many employees. If ${company} is bootstrapped, non-profit, acquired, or public, say that instead. ` +
-    `If there is no evidence of outside funding, say clearly that none was found.`
+    `What is the CURRENT funding status of ${company} (${domain})? ` +
+    `Start by stating which one it is: publicly traded, acquired, bootstrapped/self-funded, non-profit, or VC-backed and still private. ` +
+    `If it is public or acquired, say so FIRST and name the exchange/ticker or acquirer — do not describe old pre-IPO rounds as its "latest funding". ` +
+    `If it is bootstrapped or a non-profit, say that plainly and do not imply venture funding. ` +
+    `Only if it is VC-backed and private, give the latest round, amount, lead investors and date. Also give approximate employee count if known.`
   );
 }
 

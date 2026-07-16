@@ -20,25 +20,50 @@ interface Case {
   domain: string;
   /** any one of these appearing in the answer counts as correct */
   expect: string[];
+  /** if any of these appear, the answer is WRONG regardless of `expect` */
+  reject?: string[];
   note: string;
 }
 
+// No bare '$' / 'series' catch-alls: a matcher that passes almost any string
+// inflates the score and hides real failures (it scored Cloudflare "OK" while
+// the answer called a pre-IPO round its latest funding).
 const CASES: Case[] = [
-  { domain: 'stripe.com', expect: ['billion', 'series', '$'], note: 'heavily funded' },
-  { domain: 'notion.so', expect: ['series c', 'series', '$275', 'billion', '$'], note: 'Series C' },
-  { domain: 'vercel.com', expect: ['series', '$', 'million'], note: 'Series D/E' },
-  { domain: 'supabase.com', expect: ['series', '$', 'million'], note: 'Series B/C/D' },
-  { domain: 'linear.app', expect: ['series', '$', 'million'], note: 'Series A/B' },
-  { domain: 'fly.io', expect: ['series', '$', 'million'], note: 'Series B/C' },
-  { domain: 'figma.com', expect: ['series', '$', 'adobe', 'billion'], note: 'Series E / Adobe saga' },
-  { domain: 'cloudflare.com', expect: ['public', 'ipo', 'nyse', 'nasdaq', '$'], note: 'public company' },
-  // Negative cases — "no outside funding" is the correct answer.
-  { domain: 'plausible.io', expect: ['bootstrap', 'no outside', 'no funding', 'none', 'self-funded', 'not raised'], note: 'BOOTSTRAPPED' },
-  { domain: 'ghost.org', expect: ['non-profit', 'nonprofit', 'no outside', 'no funding', 'none', 'not raised', 'foundation'], note: 'NON-PROFIT' },
+  { domain: 'stripe.com', expect: ['billion'], note: 'heavily funded, private' },
+  { domain: 'notion.so', expect: ['series'], note: 'VC-backed private' },
+  { domain: 'vercel.com', expect: ['series'], note: 'VC-backed private' },
+  { domain: 'supabase.com', expect: ['series'], note: 'VC-backed private' },
+  { domain: 'linear.app', expect: ['series'], note: 'VC-backed private' },
+  { domain: 'fly.io', expect: ['series'], note: 'VC-backed private' },
+  { domain: 'figma.com', expect: ['public', 'ipo', 'nyse', 'series f'], note: 'IPO 2024' },
+  // Status must lead — describing a pre-IPO round as "latest funding" is wrong.
+  {
+    domain: 'cloudflare.com',
+    expect: ['public', 'ipo', 'nyse', 'net'],
+    reject: ['latest funding round led by gv', 'latest round led by gv'],
+    note: 'PUBLIC (NYSE: NET)',
+  },
+  // Negative cases — "no outside funding" is the correct answer. Inventing a
+  // round here is the failure that embarrasses a VC in a partner meeting.
+  {
+    domain: 'plausible.io',
+    expect: ['bootstrap', 'self-funded', 'no outside', 'not raised', 'no venture'],
+    reject: ['series a', 'series b', 'led by'],
+    note: 'BOOTSTRAPPED',
+  },
+  {
+    domain: 'ghost.org',
+    expect: ['non-profit', 'nonprofit', 'no outside', 'not raised', 'foundation', 'self-funded'],
+    reject: ['series a', 'series b', 'led by'],
+    note: 'NON-PROFIT',
+  },
 ];
 
-const hit = (answer: string, expect: string[]): boolean =>
-  expect.some((n) => answer.toLowerCase().includes(n.toLowerCase()));
+const hit = (answer: string, c: Case): boolean => {
+  const a = answer.toLowerCase();
+  if (c.reject?.some((r) => a.includes(r.toLowerCase()))) return false;
+  return c.expect.some((n) => a.includes(n.toLowerCase()));
+};
 
 async function main(): Promise<void> {
   const key = process.env.TAVILY_KEY;
@@ -55,7 +80,7 @@ async function main(): Promise<void> {
     const company = companyNameFrom(c.domain);
     try {
       const f = await funding(company, c.domain, key);
-      const ok = hit(f.answer, c.expect);
+      const ok = hit(f.answer, c);
       if (ok) correct++;
       if (f.sources.length > 0) sourced++;
       rows.push(
