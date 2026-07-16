@@ -123,7 +123,22 @@ export async function founders(company: string, domain: string, key?: string): P
 }
 
 export async function funding(company: string, domain: string, key?: string): Promise<Finding> {
-  return ask(fundingQuery(company, domain), { subject: { company, domain }, key });
+  // Authoritative sources only. Open-web SEO spam reported Cloudflare (NYSE: NET)
+  // as "private" and gave Ghost — a non-profit — a $40M Series C that belongs to a
+  // same-named company. Wikipedia/SEC/Crunchbase don't make those mistakes.
+  return ask(fundingQuery(company, domain), {
+    subject: { company, domain },
+    key,
+    includeDomains: [
+      'wikipedia.org',
+      'crunchbase.com',
+      'sec.gov',
+      'techcrunch.com',
+      'bloomberg.com',
+      'reuters.com',
+      domain, // the company's own site — the authority on "we're bootstrapped"
+    ],
+  });
 }
 
 export async function reputation(company: string, domain: string, key?: string): Promise<Finding> {

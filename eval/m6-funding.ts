@@ -25,22 +25,28 @@ interface Case {
   note: string;
 }
 
-// No bare '$' / 'series' catch-alls: a matcher that passes almost any string
-// inflates the score and hides real failures (it scored Cloudflare "OK" while
-// the answer called a pre-IPO round its latest funding).
+// `reject` is checked first and wins: it catches answers that are confidently
+// wrong ("Cloudflare is private") or that match an expect token inside a
+// negation ("does not trade on publicly...").
 const CASES: Case[] = [
-  { domain: 'stripe.com', expect: ['billion'], note: 'heavily funded, private' },
-  { domain: 'notion.so', expect: ['series'], note: 'VC-backed private' },
-  { domain: 'vercel.com', expect: ['series'], note: 'VC-backed private' },
-  { domain: 'supabase.com', expect: ['series'], note: 'VC-backed private' },
-  { domain: 'linear.app', expect: ['series'], note: 'VC-backed private' },
-  { domain: 'fly.io', expect: ['series'], note: 'VC-backed private' },
-  { domain: 'figma.com', expect: ['public', 'ipo', 'nyse', 'series f'], note: 'IPO 2024' },
-  // Status must lead — describing a pre-IPO round as "latest funding" is wrong.
+  { domain: 'stripe.com', expect: ['private', 'billion'], reject: ['publicly traded', 'acquired by'], note: 'private, VC-backed' },
+  { domain: 'notion.so', expect: ['private', 'series', 'vc-backed'], reject: ['publicly traded', 'bootstrapped'], note: 'VC-backed private' },
+  { domain: 'vercel.com', expect: ['private', 'series', 'vc-backed'], reject: ['publicly traded', 'bootstrapped'], note: 'VC-backed private' },
+  { domain: 'supabase.com', expect: ['private', 'series', 'vc-backed'], reject: ['publicly traded', 'bootstrapped'], note: 'VC-backed private' },
+  { domain: 'linear.app', expect: ['private', 'series', 'vc-backed'], reject: ['publicly traded', 'bootstrapped'], note: 'VC-backed private' },
+  { domain: 'fly.io', expect: ['private', 'series', 'vc-backed'], reject: ['publicly traded', 'bootstrapped'], note: 'VC-backed private' },
+  {
+    domain: 'figma.com',
+    expect: ['public', 'ipo', 'nyse'],
+    // The Adobe deal was terminated; calling Figma "acquired" is stale, and
+    // "does not trade publicly" is the negation that faked an OK last run.
+    reject: ['acquired by adobe', 'does not trade', 'not publicly traded', 'is a private company'],
+    note: 'PUBLIC (IPO)',
+  },
   {
     domain: 'cloudflare.com',
-    expect: ['public', 'ipo', 'nyse', 'net'],
-    reject: ['latest funding round led by gv', 'latest round led by gv'],
+    expect: ['public', 'ipo', 'nyse'],
+    reject: ['private company', 'vc-backed private', 'does not trade', 'not publicly traded'],
     note: 'PUBLIC (NYSE: NET)',
   },
   // Negative cases — "no outside funding" is the correct answer. Inventing a
@@ -48,13 +54,13 @@ const CASES: Case[] = [
   {
     domain: 'plausible.io',
     expect: ['bootstrap', 'self-funded', 'no outside', 'not raised', 'no venture'],
-    reject: ['series a', 'series b', 'led by'],
+    reject: ['series a', 'series b', 'series c', 'vc-backed'],
     note: 'BOOTSTRAPPED',
   },
   {
     domain: 'ghost.org',
     expect: ['non-profit', 'nonprofit', 'no outside', 'not raised', 'foundation', 'self-funded'],
-    reject: ['series a', 'series b', 'led by'],
+    reject: ['series a', 'series b', 'series c', 'vc-backed private'],
     note: 'NON-PROFIT',
   },
 ];
@@ -84,7 +90,7 @@ async function main(): Promise<void> {
       if (ok) correct++;
       if (f.sources.length > 0) sourced++;
       rows.push(
-        `${ok ? 'OK  ' : 'MISS'} ${c.domain.padEnd(15)} src=${String(f.sources.length).padEnd(2)} [${c.note}] ${f.answer.slice(0, 80).replace(/\s+/g, ' ')}`,
+        `${ok ? 'OK  ' : 'MISS'} ${c.domain.padEnd(15)} src=${String(f.sources.length).padEnd(2)} ver=${String(f.verified).padEnd(5)} [${c.note}] ${f.answer.slice(0, 72).replace(/\s+/g, ' ')}`,
       );
     } catch (e) {
       rows.push(`ERR  ${c.domain.padEnd(15)} ${(e as Error).message}`);
