@@ -14,5 +14,6 @@ export interface Brief {
   whatTheyDo: EnrichResponse;
   receipts: Receipts | null;
   founders: Finding | null;
+  funding: Finding | null;
   reputation: Finding | null;
 }

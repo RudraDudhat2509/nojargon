@@ -97,6 +97,24 @@ Target composition: ~7 / ~6 / ~7 across buckets so the set spans the range. This
 - *Previous-owner history* — Wayback said stripe.com was "online since 1996" (a prior owner's parked page). Cross-check `onlineSinceYear` against `registeredYear` and suppress/flag when it precedes registration.
 - *RDAP gaps* — some domains (stripe.com) return no registration event, leaving age blank.
 
+---
+
+## M6 — Funding & traction accuracy
+
+**Claim under test:** the funding line is right often enough for a VC to trust it at a glance — and says "none found" instead of inventing a round.
+
+- **Metric:** on 10 companies (`eval/m6-funding.ts`, run `npm run eval:m6`) — (a) latest round/stage or status correct, (b) 100% sourced.
+- **Targets:** ≥ **80%** correct · **100%** sourced.
+- **The negative cases carry the weight:** Plausible is bootstrapped, Ghost is a non-profit, Cloudflare is public. Inventing a Series A for a bootstrapped company is the failure that embarrasses a VC in a partner meeting — "none found" must be a confident answer, not silence.
+
+| Band | Condition | Action |
+|---|---|---|
+| ✅ **Pass** | ≥80% correct + 100% sourced | Ship the section. |
+| 🔧 **Iterate** | 60–80% | **Lever:** tighten the query / bias toward crunchbase-class sources. |
+| ⛔ **Kill** | <60% | Hide the funding section; the rest of the brief still ships. |
+
+**M5 result (2026-07-13): PASS — 10/10 founders correct, 0 confidently-wrong.** The domain-anchored query fixed the same-name conflation (the Allata bug). Honest caveat: the eval counts a hit if *any* expected founder name appears, so partial errors pass (Linear returned "Jori Timonen" for co-founder Jori Lallo). It proves *right company, right lead founder* — not every co-founder detail.
+
 ## Why these (post-pivot)
 
 - ~~**M1**~~ — killed 2026-07-12; substance is a semantic judgment, not a regex signal. The verdict moved to the LLM (M4).

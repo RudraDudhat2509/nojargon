@@ -57,6 +57,16 @@ export function reputationQuery(company: string, domain: string): string {
   return `${company} (${domain}) reviews, complaints and reputation — what do real customers and users say?`;
 }
 
+// "No funding found" is a real answer, not a gap — bootstrapped is a signal, and
+// silence would read as "we failed to look".
+export function fundingQuery(company: string, domain: string): string {
+  return (
+    `How much funding has ${company} (${domain}) raised? State the latest round, amount, lead investors, date, ` +
+    `and roughly how many employees. If ${company} is bootstrapped, non-profit, acquired, or public, say that instead. ` +
+    `If there is no evidence of outside funding, say clearly that none was found.`
+  );
+}
+
 // `explicit` lets the eval harness run outside the extension (env key) — inside
 // Chrome there is no key argument and it reads storage.
 async function getKey(explicit?: string): Promise<string | undefined> {
@@ -98,6 +108,10 @@ async function ask(query: string, opts: AskOpts = {}): Promise<Finding> {
 
 export async function founders(company: string, domain: string, key?: string): Promise<Finding> {
   return ask(foundersQuery(company, domain), { subject: { company, domain }, key });
+}
+
+export async function funding(company: string, domain: string, key?: string): Promise<Finding> {
+  return ask(fundingQuery(company, domain), { subject: { company, domain }, key });
 }
 
 export async function reputation(company: string, domain: string, key?: string): Promise<Finding> {

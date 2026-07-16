@@ -93,6 +93,9 @@ export function renderBrief(root: HTMLElement, brief: Brief, r: ScoreResult): vo
   // Founders (research)
   if (brief.founders) root.appendChild(researchSection(doc, 'Founders', brief.founders));
 
+  // Funding & traction (research)
+  if (brief.funding) root.appendChild(researchSection(doc, 'Funding & traction', brief.funding));
+
   // Reputation (research)
   if (brief.reputation) root.appendChild(researchSection(doc, 'Reputation', brief.reputation));
 

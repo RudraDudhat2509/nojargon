@@ -17,6 +17,7 @@ const fullBrief: Brief = {
   whatTheyDo: { type: 'enriched', enrichment: { tldr: 'Payment software for online businesses.', explainsWhatItDoes: true, audience: 'developers' } },
   receipts: { registeredYear: 2010, domainAgeYears: 16, onlineSinceYear: 2011 },
   founders: { answer: 'Founded by Patrick and John Collison.', sources: [{ title: 'About', url: 'https://about.com' }], verified: true },
+  funding: { answer: 'Raised $12M Series A led by Accel in 2024.', sources: [{ title: 'CB', url: 'https://cb.com' }], verified: true },
   reputation: { answer: 'Devs praise the API; gripes about account freezes.', sources: [{ title: 'Reddit', url: 'https://reddit.com/x' }], verified: true },
 };
 
@@ -32,6 +33,7 @@ describe('renderBrief', () => {
     expect(r.textContent).toContain('Payment software for online businesses.');
     expect(r.textContent).toContain('Collison'); // founders
     expect(r.textContent).toContain('account freezes'); // reputation
+    expect(r.textContent).toContain('Series A'); // funding
     expect(r.textContent).toContain('16'); // domain age
     expect(r.textContent).toContain('2011'); // online since
     expect(r.textContent).toContain('buzzword load: medium');
@@ -49,7 +51,7 @@ describe('renderBrief', () => {
     const r = root();
     renderBrief(r, fullBrief, score);
     const details = [...r.querySelectorAll('details.sources')];
-    expect(details.length).toBe(2); // founders + reputation
+    expect(details.length).toBe(3); // founders + funding + reputation
     // Collapsed by default: no `open` attribute.
     expect(details.every((d) => !d.hasAttribute('open'))).toBe(true);
     expect(details[0]!.querySelector('summary')?.textContent).toBe('1 source');
@@ -84,9 +86,10 @@ describe('renderBrief', () => {
 
   it('omits sections that are null rather than showing them empty', () => {
     const r = root();
-    renderBrief(r, { ...fullBrief, founders: null, reputation: null, receipts: null }, score);
+    renderBrief(r, { ...fullBrief, founders: null, funding: null, reputation: null, receipts: null }, score);
     expect(r.textContent).not.toContain('Founders');
     expect(r.textContent).not.toContain('Reputation');
+    expect(r.textContent).not.toContain('Funding');
     expect(r.textContent).not.toContain('Legitimacy');
     // local sections still render
     expect(r.textContent).toContain('Payment software for online businesses.');
