@@ -7,7 +7,9 @@
     "build": "vite build",
     "dev": "vite build --watch",
     "test": "vitest run",
-    "golden:extract": "tsx golden/extract.ts"
+    "golden:extract": "tsx golden/extract.ts",
+    "eval:m5": "tsx eval/m5-founders.ts",
+    "eval:m6": "tsx eval/m6-funding.ts"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.28",

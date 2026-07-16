@@ -97,6 +97,42 @@ Target composition: ~7 / ~6 / ~7 across buckets so the set spans the range. This
 - *Previous-owner history* — Wayback said stripe.com was "online since 1996" (a prior owner's parked page). Cross-check `onlineSinceYear` against `registeredYear` and suppress/flag when it precedes registration.
 - *RDAP gaps* — some domains (stripe.com) return no registration event, leaving age blank.
 
+---
+
+## M6 — Funding & traction accuracy
+
+**Claim under test:** the funding line is right often enough for a VC to trust it at a glance — and says "none found" instead of inventing a round.
+
+- **Metric:** on 10 companies (`eval/m6-funding.ts`, run `npm run eval:m6`) — (a) latest round/stage or status correct, (b) 100% sourced.
+- **Targets:** ≥ **80%** correct · **100%** sourced.
+- **The negative cases carry the weight:** Plausible is bootstrapped, Ghost is a non-profit, Cloudflare is public. Inventing a Series A for a bootstrapped company is the failure that embarrasses a VC in a partner meeting — "none found" must be a confident answer, not silence.
+
+| Band | Condition | Action |
+|---|---|---|
+| ✅ **Pass** | ≥80% correct + 100% sourced | Ship the section. |
+| 🔧 **Iterate** | 60–80% | **Lever:** tighten the query / bias toward crunchbase-class sources. |
+| ⛔ **Kill** | <60% | Hide the funding section; the rest of the brief still ships. |
+
+### M6 result (2026-07-13): ⚠️ ITERATE — 70%, shipped with a known defect
+
+Two iterations, both short of the 80% gate. **The failures are systematic, not noise:**
+
+| Case | Answer | Reality |
+|---|---|---|
+| plausible.io | "VC-backed private, latest round…" | **bootstrapped** (and this *regressed* — run 1 got it right) |
+| cloudflare.com | "VC-backed private, last funded 2019 $150M" | **public, NYSE: NET** (2019 was the IPO) |
+| figma.com | "private company with a market cap of $11.2B" | **public** (a market cap for a private company is incoherent) |
+
+**Root cause:** the answer engine has a strong prior — *company → VC-backed private → here's the latest round* — so it fails exactly where the *absence* of VC funding is the story. Score is 6/6 on VC-backed private startups, 0/3 on public/bootstrapped.
+
+**The "authoritative sources" lever backfired:** Crunchbase-class sources are *databases of funded companies*, so pointing at them made it **more** likely to invent a round for a bootstrapped company.
+
+**`verified` does not catch this.** It answers "is this about the right company?", not "is this claim true?" — all three failures returned `verified: true`. Right company, wrong fact, no warning.
+
+**Untried lever (next session):** decompose the question — a narrow "is X public/bootstrapped/acquired?" first, then round details only if private. Different mechanism, not more prompt-fiddling. If that doesn't clear 80%, hide the section.
+
+**M5 result (2026-07-13): PASS — 10/10 founders correct, 0 confidently-wrong.** The domain-anchored query fixed the same-name conflation (the Allata bug). Honest caveat: the eval counts a hit if *any* expected founder name appears, so partial errors pass (Linear returned "Jori Timonen" for co-founder Jori Lallo). It proves *right company, right lead founder* — not every co-founder detail.
+
 ## Why these (post-pivot)
 
 - ~~**M1**~~ — killed 2026-07-12; substance is a semantic judgment, not a regex signal. The verdict moved to the LLM (M4).

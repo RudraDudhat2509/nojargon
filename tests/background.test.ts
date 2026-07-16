@@ -2,12 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { handleEnrich, assembleBrief, type BriefDeps } from '../src/background/service-worker';
 import type { LlmAdapter } from '../src/llm/adapter';
 
-const finding = (answer: string) => ({ answer, sources: [{ title: 't', url: 'https://s.com' }] });
+const finding = (answer: string) => ({ answer, sources: [{ title: 't', url: 'https://s.com' }], verified: true });
 
 const goodDeps: BriefDeps = {
   enrich: async () => ({ type: 'enriched', enrichment: { tldr: 'Payments.', explainsWhatItDoes: true, audience: null } }),
   receipts: async () => ({ registeredYear: 2010, domainAgeYears: 16, onlineSinceYear: 2011 }),
   founders: async () => finding('Patrick and John Collison.'),
+  funding: async () => finding('Raised $12M Series A.'),
   reputation: async () => finding('Devs like the API.'),
 };
 
@@ -16,6 +17,7 @@ describe('assembleBrief', () => {
     const b = await assembleBrief('https://www.stripe.com/in', 'text', goodDeps);
     expect(b.company).toBe('Stripe');
     expect(b.founders?.answer).toContain('Collison');
+    expect(b.funding?.answer).toContain('Series A');
     expect(b.reputation?.answer).toContain('API');
     expect(b.receipts?.domainAgeYears).toBe(16);
     expect(b.whatTheyDo).toEqual({ type: 'enriched', enrichment: { tldr: 'Payments.', explainsWhatItDoes: true, audience: null } });

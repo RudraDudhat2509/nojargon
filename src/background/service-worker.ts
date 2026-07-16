@@ -2,7 +2,7 @@ import { selectAdapter, type LlmAdapter } from '../llm/adapter';
 import { NanoAdapter } from '../llm/nano';
 import { GroqAdapter } from '../llm/groq';
 import { domainOf, companyNameFrom, fetchReceipts, type Receipts } from '../receipts';
-import { founders, reputation, type Finding } from '../research/tavily';
+import { founders, funding, reputation, type Finding } from '../research/tavily';
 import type { Brief, EnrichResponse } from '../shared/messages';
 
 export async function handleEnrich(mainText: string, adapters: LlmAdapter[]): Promise<EnrichResponse> {
@@ -20,8 +20,9 @@ export async function handleEnrich(mainText: string, adapters: LlmAdapter[]): Pr
 export interface BriefDeps {
   enrich: (mainText: string) => Promise<EnrichResponse>;
   receipts: (domain: string) => Promise<Receipts>;
-  founders: (company: string) => Promise<Finding>;
-  reputation: (company: string) => Promise<Finding>;
+  founders: (company: string, domain: string) => Promise<Finding>;
+  funding: (company: string, domain: string) => Promise<Finding>;
+  reputation: (company: string, domain: string) => Promise<Finding>;
 }
 
 const orNull = <T>(r: PromiseSettledResult<T>): T | null => (r.status === 'fulfilled' ? r.value : null);
@@ -32,11 +33,12 @@ export async function assembleBrief(url: string, mainText: string, deps: BriefDe
   const domain = domainOf(url);
   const company = companyNameFrom(domain);
 
-  const [whatTheyDo, receipts, foundersRes, reputationRes] = await Promise.allSettled([
+  const [whatTheyDo, receipts, foundersRes, fundingRes, reputationRes] = await Promise.allSettled([
     deps.enrich(mainText),
     deps.receipts(domain),
-    deps.founders(company),
-    deps.reputation(company),
+    deps.founders(company, domain),
+    deps.funding(company, domain),
+    deps.reputation(company, domain),
   ]);
 
   return {
@@ -44,6 +46,7 @@ export async function assembleBrief(url: string, mainText: string, deps: BriefDe
     whatTheyDo: orNull(whatTheyDo) ?? { type: 'no-llm' },
     receipts: orNull(receipts),
     founders: orNull(foundersRes),
+    funding: orNull(fundingRes),
     reputation: orNull(reputationRes),
   };
 }
@@ -63,6 +66,7 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
         enrich: (t) => handleEnrich(t, [NanoAdapter, GroqAdapter]),
         receipts: (d) => fetchReceipts(d),
         founders,
+        funding,
         reputation,
       }).then(sendResponse);
       return true;

@@ -1,77 +1,159 @@
-/* cinematic dark — ink & gold */
+/* Readability first: high contrast, generous line-height, no decoration for its own sake. */
 :root {
-  color-scheme: dark;
+  --bg: #ffffff;
+  --fg: #18181b;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --raised: #f9fafb;
+  --ok: #15803d;
+  --bad: #b91c1c;
+  --warn: #a16207;
+  --link: #1d4ed8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1f;
+    --fg: #ececee;
+    --muted: #9ca3af;
+    --line: #2f2f34;
+    --raised: #232327;
+    --ok: #4ade80;
+    --bad: #f87171;
+    --warn: #fbbf24;
+    --link: #93b4fd;
+  }
 }
 
 body {
   margin: 0;
-  font: 14px/1.5 system-ui, -apple-system, sans-serif;
-  background: #0e0e10;
-  color: #e8e6df;
-  padding: 16px;
-}
-
-.prose {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #26262b;
-}
-
-.prose h2 {
-  margin: 0 0 6px;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #8a8780;
-}
-
-.prose p {
-  margin: 0;
-  font-size: 15px;
-}
-
-.prose .cta {
-  color: #8a8780;
-  font-style: italic;
+  padding: 18px 16px 28px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 .company {
-  font-size: 20px;
+  margin: 0 0 16px;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: 0.01em;
-  margin: 0 0 14px;
-  color: #d9b56a;
+  letter-spacing: -0.01em;
+  color: var(--fg);
 }
 
 .sec {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #26262b;
+  margin: 0 0 18px;
+  padding: 0 0 18px;
+  border-bottom: 1px solid var(--line);
 }
 
 .sec:last-child {
   border-bottom: none;
+  padding-bottom: 0;
 }
 
 .sec h2 {
-  margin: 0 0 6px;
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: #8a8780;
+  color: var(--muted);
 }
 
 .sec p {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
+}
+
+.tldr {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--fg);
+}
+
+.audience,
+.cta {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Status lines — the marker carries the meaning, so no emoji needed. */
+.reality {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.reality .rc {
+  position: relative;
+  margin: 5px 0;
+  padding-left: 18px;
   font-size: 14px;
 }
 
+.reality .rc::before {
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+}
+
+.reality .ok::before {
+  content: '✓';
+  color: var(--ok);
+}
+
+.reality .bad::before {
+  content: '✕';
+  color: var(--bad);
+}
+
+.reality .warn::before {
+  content: '!';
+  color: var(--warn);
+}
+
+/* Sources: collapsed by default so they never crowd the read. */
 .sources {
-  font-size: 12px;
+  margin-top: 8px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.sources > summary {
+  cursor: pointer;
+  color: var(--muted);
+  list-style: none;
+  user-select: none;
+}
+
+.sources > summary::-webkit-details-marker {
+  display: none;
+}
+
+.sources > summary::before {
+  content: '▸ ';
+  color: var(--muted);
+}
+
+.sources[open] > summary::before {
+  content: '▾ ';
+}
+
+.sources ul {
+  margin: 8px 0 2px;
+  padding-left: 16px;
+}
+
+.sources li {
+  margin: 4px 0;
 }
 
 .sources a {
-  color: #d9b56a;
+  color: var(--link);
   text-decoration: none;
 }
 
@@ -79,55 +161,29 @@ body {
   text-decoration: underline;
 }
 
-.prose .tldr {
-  font-size: 16px;
-  font-weight: 600;
-  color: #e8e6df;
-  margin: 0 0 10px;
-}
-
-.prose .audience {
-  margin: -6px 0 10px;
-  font-size: 13px;
-  color: #8a8780;
-}
-
-.reality {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.reality .rc {
-  margin: 4px 0;
-  font-size: 13px;
-}
-
-.reality .ok {
-  color: #d9b56a;
-}
-
-.reality .bad {
-  color: #c9a58a;
-}
-
-.reality .warn {
-  color: #8a8780;
-}
-
 .claims {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
 .claims li {
-  padding: 6px 8px;
-  border-left: 2px solid #3a3a40;
-  margin: 4px 0;
+  margin: 6px 0;
+  padding: 4px 0 4px 10px;
+  border-left: 2px solid var(--line);
+  font-size: 14px;
 }
 
 .claims li.empty {
-  border-left-color: #b4553a;
-  color: #c9a58a;
+  border-left-color: var(--bad);
+}
+
+.unverified {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--warn);
+  background: var(--raised);
+  border-left: 3px solid var(--warn);
+  border-radius: 0 4px 4px 0;
+  padding: 6px 10px;
 }
