@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTavily, foundersQuery, reputationQuery, isVerified } from '../src/research/tavily';
+import { parseTavily, foundersQuery, reputationQuery, fundingQuery, isVerified, MAX_QUERY } from '../src/research/tavily';
 
 describe('isVerified (same-name conflation guard)', () => {
   const subject = { domain: 'altagic.com', company: 'Altagic' };
@@ -49,6 +49,24 @@ describe('parseTavily', () => {
 
   it('tolerates missing results array', () => {
     expect(parseTavily({ answer: 'x' }).sources).toEqual([]);
+  });
+});
+
+describe('query length guard', () => {
+  // Tavily 400s past MAX_QUERY. A too-long query silently killed an entire eval
+  // run, so every builder is bounds-checked — including for long company names.
+  const long = { company: 'A'.repeat(60), domain: `${'b'.repeat(60)}.com` };
+
+  it('keeps every query under the Tavily limit', () => {
+    expect(foundersQuery('Stripe', 'stripe.com').length).toBeLessThan(MAX_QUERY);
+    expect(reputationQuery('Stripe', 'stripe.com').length).toBeLessThan(MAX_QUERY);
+    expect(fundingQuery('Stripe', 'stripe.com').length).toBeLessThan(MAX_QUERY);
+  });
+
+  it('stays under the limit even for absurd company names', () => {
+    expect(foundersQuery(long.company, long.domain).length).toBeLessThan(MAX_QUERY);
+    expect(reputationQuery(long.company, long.domain).length).toBeLessThan(MAX_QUERY);
+    expect(fundingQuery(long.company, long.domain).length).toBeLessThan(MAX_QUERY);
   });
 });
 

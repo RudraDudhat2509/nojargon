@@ -20,6 +20,8 @@ export interface Finding {
 
 const ENDPOINT = 'https://api.tavily.com/search';
 const MAX_SOURCES = 3;
+/** Tavily rejects longer queries with a 400. Guard rather than trust every caller. */
+export const MAX_QUERY = 400;
 
 // A source counts as corroborating only if it actually mentions this company —
 // by domain, or by name in the title. Guards against same-name conflation.
@@ -47,25 +49,29 @@ export function parseTavily(json: unknown, subject?: { domain?: string; company?
   return { answer, sources, verified: isVerified(sources, subject) };
 }
 
+/** Bound interpolated values so no template can overrun MAX_QUERY. */
+const short = (s: string, n = 40): string => (s.length > n ? s.slice(0, n) : s);
+
 // Anchored on the domain: "Who founded Altagic?" pulls a same-named exec from
 // Allata; "the company at altagic.com" does not.
 export function foundersQuery(company: string, domain: string): string {
-  return `Who founded the company at ${domain}? Name the founders and current CEO of ${company} (${domain}) specifically — not similarly named people at other companies.`;
+  const c = short(company);
+  const d = short(domain);
+  return `Who founded the company at ${d}? Name the founders and current CEO of ${c} (${d}) specifically — not similarly named people at other companies.`;
 }
 
 export function reputationQuery(company: string, domain: string): string {
-  return `${company} (${domain}) reviews, complaints and reputation — what do real customers and users say?`;
+  return `${short(company)} (${short(domain)}) reviews, complaints and reputation — what do real customers and users say?`;
 }
 
 // "No funding found" is a real answer, not a gap — bootstrapped is a signal, and
 // silence would read as "we failed to look".
+// Kept under MAX_QUERY — Tavily 400s on longer queries.
 export function fundingQuery(company: string, domain: string): string {
   return (
-    `What is the CURRENT funding status of ${company} (${domain})? ` +
-    `Start by stating which one it is: publicly traded, acquired, bootstrapped/self-funded, non-profit, or VC-backed and still private. ` +
-    `If it is public or acquired, say so FIRST and name the exchange/ticker or acquirer — do not describe old pre-IPO rounds as its "latest funding". ` +
-    `If it is bootstrapped or a non-profit, say that plainly and do not imply venture funding. ` +
-    `Only if it is VC-backed and private, give the latest round, amount, lead investors and date. Also give approximate employee count if known.`
+    `${short(company)} (${short(domain)}) current funding status: public (name ticker), acquired, bootstrapped, non-profit, or VC-backed private? ` +
+    `If public or acquired say that first, not old pre-IPO rounds. If bootstrapped or non-profit say so plainly. ` +
+    `If VC-backed private: latest round, amount, lead investor, date, employee count.`
   );
 }
 
@@ -97,14 +103,18 @@ async function ask(query: string, opts: AskOpts = {}): Promise<Finding> {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
     body: JSON.stringify({
-      query,
+      query: query.slice(0, MAX_QUERY),
       search_depth: 'basic',
       max_results: 5,
       include_answer: true,
       ...(opts.includeDomains ? { include_domains: opts.includeDomains } : {}),
     }),
   });
-  if (!res.ok) throw new Error(`tavily ${res.status}`);
+  if (!res.ok) {
+    // Surface the API's reason — a bare status code cost us a whole eval run.
+    const detail = await res.text().catch(() => '');
+    throw new Error(`tavily ${res.status}${detail ? `: ${detail.slice(0, 200)}` : ''}`);
+  }
   return parseTavily(await res.json(), opts.subject);
 }
 
