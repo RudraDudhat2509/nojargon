@@ -37,6 +37,13 @@ export function parseCdx(json: unknown): { onlineSinceYear: number | null } {
   return { onlineSinceYear: Number.isFinite(year) && year > 1990 ? year : null };
 }
 
+// "docs.stripe.com" → "Stripe". Good enough to seed a search query.
+export function companyNameFrom(domain: string): string {
+  const parts = domain.split('.').filter(Boolean);
+  const sld = parts.length >= 2 ? parts[parts.length - 2]! : (parts[0] ?? '');
+  return sld ? sld.charAt(0).toUpperCase() + sld.slice(1) : '';
+}
+
 export function ageFrom(registeredYear: number | null, now: Date): number | null {
   if (registeredYear == null) return null;
   return now.getUTCFullYear() - registeredYear;

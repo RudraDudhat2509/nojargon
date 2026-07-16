@@ -1,6 +1,8 @@
 import { score } from '../engine';
+import { domainOf, companyNameFrom } from '../receipts';
 import type { ScoreResult } from '../engine/types';
-import type { EnrichResponse } from '../shared/messages';
+import type { Source } from '../research/tavily';
+import type { Brief } from '../shared/messages';
 
 // Runs IN the page via chrome.scripting.executeScript — must be fully self-contained
 // (no imports, no outer-scope references). Grabs visible product copy, skipping
@@ -35,61 +37,100 @@ function bullet(doc: Document, kind: 'ok' | 'bad' | 'warn', text: string): HTMLE
   return el(doc, 'li', { class: `rc ${kind}` }, `${GLYPH[kind]} ${text}`);
 }
 
-// Deterministic "translations" section: each detected buzzword → its plain meaning.
-export function renderResult(root: HTMLElement, r: ScoreResult): void {
+// In a due-diligence tool an unsourced external claim is worthless — every
+// research answer renders its links.
+function sourceLinks(doc: Document, sources: Source[]): HTMLElement {
+  const p = el(doc, 'p', { class: 'sources' });
+  sources.forEach((s, i) => {
+    p.appendChild(el(doc, 'a', { href: s.url, target: '_blank', rel: 'noreferrer' }, s.title));
+    if (i < sources.length - 1) p.appendChild(doc.createTextNode(' · '));
+  });
+  return p;
+}
+
+function section(doc: Document, title: string): HTMLElement {
+  const s = el(doc, 'section', { class: 'sec' });
+  s.appendChild(el(doc, 'h2', {}, title));
+  return s;
+}
+
+export function renderBrief(root: HTMLElement, brief: Brief, r: ScoreResult): void {
   const doc = root.ownerDocument;
   root.innerHTML = '';
+  if (brief.company) root.appendChild(el(doc, 'h1', { class: 'company' }, brief.company));
+
+  // 💡 What they do (local page de-jargon)
+  const what = section(doc, '💡 What they do');
+  if (brief.whatTheyDo.type === 'enriched') {
+    what.appendChild(el(doc, 'p', { class: 'tldr' }, brief.whatTheyDo.enrichment.tldr));
+    const aud = brief.whatTheyDo.enrichment.audience;
+    if (aud) what.appendChild(el(doc, 'p', { class: 'audience' }, `For: ${aud}`));
+  } else {
+    what.appendChild(
+      el(doc, 'p', { class: 'cta' }, 'Add a free Groq key or enable on-device AI for the plain-English summary.'),
+    );
+  }
+  root.appendChild(what);
+
+  // 👤 Founders (research)
+  if (brief.founders) {
+    const s = section(doc, '👤 Founders');
+    s.appendChild(el(doc, 'p', {}, brief.founders.answer));
+    if (brief.founders.sources.length) s.appendChild(sourceLinks(doc, brief.founders.sources));
+    root.appendChild(s);
+  }
+
+  // 💬 Reputation (research)
+  if (brief.reputation) {
+    const s = section(doc, '💬 Reputation');
+    s.appendChild(el(doc, 'p', {}, brief.reputation.answer));
+    if (brief.reputation.sources.length) s.appendChild(sourceLinks(doc, brief.reputation.sources));
+    root.appendChild(s);
+  }
+
+  // 🧾 Legitimacy (zero-key receipts)
+  const rc = brief.receipts;
+  if (rc && (rc.domainAgeYears != null || rc.onlineSinceYear != null)) {
+    const s = section(doc, '🧾 Legitimacy');
+    const ul = el(doc, 'ul', { class: 'reality' });
+    if (rc.domainAgeYears != null) {
+      const young = rc.domainAgeYears < 1;
+      ul.appendChild(
+        bullet(doc, young ? 'bad' : 'ok', `Domain ${rc.domainAgeYears} yrs old (registered ${rc.registeredYear})`),
+      );
+    }
+    if (rc.onlineSinceYear != null) ul.appendChild(bullet(doc, 'ok', `Online since ${rc.onlineSinceYear} (web archive)`));
+    s.appendChild(ul);
+    root.appendChild(s);
+  }
+
+  // 📣 Marketing honesty (local)
+  const m = section(doc, '📣 Marketing honesty');
+  const ul = el(doc, 'ul', { class: 'reality' });
+  if (brief.whatTheyDo.type === 'enriched') {
+    ul.appendChild(
+      brief.whatTheyDo.enrichment.explainsWhatItDoes
+        ? bullet(doc, 'ok', 'clearly says what it does')
+        : bullet(doc, 'bad', 'never actually says what it does'),
+    );
+  }
+  for (const f of r.redFlags) ul.appendChild(bullet(doc, 'bad', f.message));
+  if (r.buzzwordLoad) ul.appendChild(bullet(doc, 'warn', `buzzword load: ${r.buzzwordLoad} (${r.claims.length} found)`));
+  m.appendChild(ul);
+  root.appendChild(m);
+
+  // Decoded buzzwords
   if (r.claims.length) {
-    root.appendChild(el(doc, 'h2', {}, 'Buzzwords decoded'));
+    const s = section(doc, 'Buzzwords decoded');
     const list = el(doc, 'ul', { class: 'claims' });
     for (const c of r.claims) {
       const li = el(doc, 'li', {}, `${c.text} → ${c.plain}`);
       if (c.empty) li.classList.add('empty');
       list.appendChild(li);
     }
-    root.appendChild(list);
+    s.appendChild(list);
+    root.appendChild(s);
   }
-}
-
-export function renderProseLoading(root: HTMLElement): void {
-  const doc = root.ownerDocument;
-  root.querySelector('.prose')?.remove();
-  const box = el(doc, 'section', { class: 'prose loading' });
-  box.append(el(doc, 'h2', {}, 'TL;DR'), el(doc, 'p', { class: 'cta' }, 'Reading the page…'));
-  root.prepend(box);
-}
-
-// The fused card: LLM TL;DR (when available) + a reality check that combines the
-// LLM's read with our deterministic red flags and buzzword load.
-export function renderEnrichment(root: HTMLElement, res: EnrichResponse, result: ScoreResult): void {
-  const doc = root.ownerDocument;
-  root.querySelector('.prose')?.remove();
-  const box = el(doc, 'section', { class: 'prose' });
-
-  if (res.type === 'enriched') {
-    box.append(el(doc, 'h2', {}, 'TL;DR'), el(doc, 'p', { class: 'tldr' }, res.enrichment.tldr));
-    if (res.enrichment.audience) box.append(el(doc, 'p', { class: 'audience' }, `For: ${res.enrichment.audience}`));
-  } else {
-    box.append(
-      el(doc, 'p', { class: 'cta' },
-        'Turn on the free summary: enable on-device AI (chrome://flags → Gemini Nano) or add a free Groq key. The reality check below works without it.'),
-    );
-  }
-
-  box.append(el(doc, 'h2', {}, 'Reality check'));
-  const ul = el(doc, 'ul', { class: 'reality' });
-  if (res.type === 'enriched') {
-    ul.append(
-      res.enrichment.explainsWhatItDoes
-        ? bullet(doc, 'ok', 'clearly says what it does')
-        : bullet(doc, 'bad', 'never actually says what it does'),
-    );
-  }
-  for (const f of result.redFlags) ul.append(bullet(doc, 'bad', f.message));
-  if (result.buzzwordLoad) ul.append(bullet(doc, 'warn', `buzzword load: ${result.buzzwordLoad} (${result.claims.length} found)`));
-  box.append(ul);
-
-  root.prepend(box);
 }
 
 async function run(): Promise<void> {
@@ -114,11 +155,13 @@ async function run(): Promise<void> {
     return;
   }
 
+  const url = tab.url ?? '';
+  const company = companyNameFrom(domainOf(url));
+  root.textContent = `Looking up ${company || 'this company'}…`;
+
   const result = score(mainText);
-  renderResult(root, result);
-  renderProseLoading(root);
-  const enrich = (await chrome.runtime.sendMessage({ type: 'enrich', mainText })) as EnrichResponse;
-  renderEnrichment(root, enrich, result);
+  const brief = (await chrome.runtime.sendMessage({ type: 'brief', url, mainText })) as Brief;
+  renderBrief(root, brief, result);
 }
 
 if (typeof chrome !== 'undefined' && chrome.tabs) {
