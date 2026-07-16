@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0 — 2026-07-13 (VC company brief)
+
+- **Reframed the product**: from "de-jargon this page" to a **plain-English company brief for VCs** — what they do, who the founders are, reputation, legitimacy — because paraphrasing a company's own marketing is inherently low-value.
+- **`receipts`** (zero-key, private): domain age via RDAP + first web-archive snapshot via Wayback CDX. Independent legitimacy signal that's hard to fake.
+- **`research`** (Tavily, free 1000/mo no card): founders + reputation answers, each rendered **with source links** — an unsourced claim is worthless in a DD tool.
+- **Background** fans out every section in parallel (`Promise.allSettled`); any source failing/keyless nulls only its own section.
+- **Panel**: the brief card — What they do / Founders / Reputation / Legitimacy / Marketing honesty / Buzzwords decoded.
+- 54 tests.
+
+### Known issues (logged from first live run)
+- Founders lookup can conflate a same-named person at a different company (observed: "Matt Rosen … of Allata" surfaced for Altagic). Needs domain-scoped queries — tracked under M5.
+- Wayback "online since" can reflect a **previous domain owner** (observed: stripe.com → 1996). Needs cross-checking against the registration date.
+- RDAP can fail for some domains (observed: stripe.com), leaving domain age blank.
+
 ## 0.3.0 — 2026-07-12 (free/native summary + honest pivot)
 
 - **Retired the deterministic substance %** after M1 killed it (Spearman ρ=0.227; the concrete-signal detector was noise — fired on event banners/citations, missed technical substance). Replaced with a coarse, honest `buzzwordLoad` (high/medium/low). See `learnings.md`.
