@@ -8,12 +8,12 @@ Not a summarizer. Paraphrasing a company's own marketing is worthless — they w
 
 ```
 STRIPE
-💡 What they do    Payment software for online businesses.
-👤 Founders        Patrick and John Collison founded Stripe in 2010…   [sources]
-💬 Reputation      Devs praise the API; complaints about support.      [reddit] [trustpilot]
-🧾 Legitimacy      ✓ Domain 16 yrs old (registered 2010)
+ What they do    Payment software for online businesses.
+ Founders        Patrick and John Collison founded Stripe in 2010…   [sources]
+ Reputation      Devs praise the API; complaints about support.      [reddit] [trustpilot]
+ Legitimacy      ✓ Domain 16 yrs old (registered 2010)
                    ✓ Online since 2011 (web archive)
-📣 Marketing       ✓ clearly says what it does
+ Marketing       ✓ clearly says what it does
                    ⚠ buzzword load: medium (3 found)
 Buzzwords decoded  seamless → works without extra setup
 ```
